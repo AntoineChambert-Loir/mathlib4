@@ -102,40 +102,37 @@ theorem exists_mem_notMem (hn : 1 ≤ n) (hα : n < ENat.card α) {a b : α} (ha
     rwa [mem_iff, ← ENat.coe_inj, ← this.encard_eq_coe_toFinset_card]⟩,
       by simpa using has, by simpa using has'⟩
 
+section
+
+variable [DecidableEq α]
+
 variable (α n) in
 /-- `Nat.Combination α n` as a `SubMulAction` of `Finset α`. -/
 @[to_additive /--`Nat.Combination α n` as a `SubAddAction` of `Finsetα`.-/]
-def subMulAction [DecidableEq α] : SubMulAction G (Finset α) where
+def subMulAction : SubMulAction G (Finset α) where
   carrier := n.Combination α
   smul_mem' g s := (Finset.card_smul_finset g s).trans
 
 @[to_additive]
-instance [DecidableEq α] : MulAction G (n.Combination α) :=
+instance : MulAction G (n.Combination α) :=
   (subMulAction G α n).mulAction
 
 variable {G}
 
 @[to_additive (attr := simp)]
-theorem coe_smul [DecidableEq α] {n : ℕ} {g : G} {s : n.Combination α} :
+theorem coe_smul {n : ℕ} {g : G} {s : n.Combination α} :
     ((g • s : n.Combination α) : Finset α) = g • s :=
   SubMulAction.val_smul (p := subMulAction G α n) g s
 
 @[to_additive addAction_stabilizer_coe]
-theorem stabilizer_coe [DecidableEq α] {n : ℕ} (s : n.Combination α) :
+theorem stabilizer_coe {n : ℕ} (s : n.Combination α) :
     stabilizer G s = stabilizer G (s : Set α) := by
   ext g
   simp [mem_stabilizer_iff, ← Subtype.coe_inj, ← Finset.coe_inj]
 
-theorem addAction_stabilizer_coe [DecidableEq α] {G : Type*} [AddGroup G] [AddAction G α]
-    {n : ℕ} (s : n.Combination α) :
-    AddAction.stabilizer G s = AddAction.stabilizer G (s : Set α) := by
-  ext g
-  simp [AddAction.mem_stabilizer_iff, ← Subtype.coe_inj, ← Finset.coe_inj]
-
-theorem addAction_faithful {G : Type*} [AddGroup G] {α : Type*} [AddAction G α] {n : ℕ}
-    [DecidableEq α] (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
-    AddAction.toPerm g = (1 : Equiv.Perm (n.Combination α))
-      ↔ AddAction.toPerm g = (1 : Equiv.Perm α) := by
+theorem addAction_faithful {G : Type*} [AddGroup G] [AddAction G α] {n : ℕ}
+    (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
+    AddAction.toPerm g = (1 : Perm (n.Combination α)) ↔ AddAction.toPerm g = (1 : Perm α) := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · contrapose h with h
     have : ∃ a, (g +ᵥ a : α) ≠ a := by simpa [Equiv.ext_iff] using h
@@ -144,7 +141,7 @@ theorem addAction_faithful {G : Type*} [AddGroup G] {α : Type*} [AddAction G α
     rw [Equiv.ext_iff, not_forall]
     use s
     contrapose! has'
-    simp only [AddAction.toPerm_apply, Equiv.Perm.coe_one, id_eq] at has'
+    simp only [AddAction.toPerm_apply, coe_one, id_eq] at has'
     rw [← has']
     simpa [← mem_coe_iff]
   · simp only [Equiv.ext_iff, AddAction.toPerm_apply] at h ⊢
@@ -153,19 +150,18 @@ theorem addAction_faithful {G : Type*} [AddGroup G] {α : Type*} [AddAction G α
 /-- If an additive group `G` acts faithfully on `α`,
 then it acts faithfully on `n.Combination α`,
 provided `1 ≤ n < ENat.card α`. -/
-theorem faithfulVAdd {G : Type*} [AddGroup G] {α : Type*} [AddAction G α] {n : ℕ}
-    [DecidableEq α] (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulVAdd G α] :
+theorem faithfulVAdd {G : Type*} [AddGroup G] [AddAction G α] {n : ℕ}
+    (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulVAdd G α] :
     FaithfulVAdd G (n.Combination α) := by
   rw [faithfulVAdd_iff]
   intro g hg
   apply AddAction.toPerm_injective (α := G) (β := α)
   rw [AddAction.toPerm_zero, ← addAction_faithful hn hα]
-  exact Equiv.Perm.ext_iff.mpr hg
+  exact Perm.ext_iff.mpr hg
 
-theorem mulAction_faithful {G : Type*} [Group G] {α : Type*} [MulAction G α] {n : ℕ}
-    [DecidableEq α] (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
-    MulAction.toPerm g = (1 : Equiv.Perm (n.Combination α))
-      ↔ MulAction.toPerm g = (1 : Equiv.Perm α) := by
+theorem mulAction_faithful {G : Type*} [Group G] [MulAction G α] {n : ℕ}
+    (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
+    MulAction.toPerm g = (1 : Perm (n.Combination α)) ↔ MulAction.toPerm g = (1 : Perm α) := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · contrapose h with h
     have : ∃ a, (g • a : α) ≠ a := by simpa [Equiv.ext_iff] using h
@@ -174,7 +170,7 @@ theorem mulAction_faithful {G : Type*} [Group G] {α : Type*} [MulAction G α] {
     rw [Equiv.ext_iff, not_forall]
     use s
     contrapose! has'
-    simp only [MulAction.toPerm_apply, Equiv.Perm.coe_one, id_eq] at has'
+    simp only [MulAction.toPerm_apply, coe_one, id_eq] at has'
     rw [← has']
     simpa only [coe_smul, smul_mem_smul_finset_iff, ← mem_coe_iff]
   · simp only [Equiv.ext_iff, MulAction.toPerm_apply] at h ⊢
@@ -183,13 +179,13 @@ theorem mulAction_faithful {G : Type*} [Group G] {α : Type*} [MulAction G α] {
 /-- If a group `G` acts faithfully on `α`,
 then it acts faithfull on `n.Combination α`,
 provided `1 ≤ n < ENat.card α`. -/
-theorem faithfulSMul [DecidableEq α] (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulSMul G α] :
+theorem faithfulSMul (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulSMul G α] :
     FaithfulSMul G (n.Combination α) := by
   rw [faithfulSMul_iff]
   intro g hg
   apply MulAction.toPerm_injective (α := G) (β := α)
   rw [MulAction.toPerm_one, ← mulAction_faithful hn hα]
-  exact Equiv.Perm.ext_iff.mpr hg
+  exact Perm.ext_iff.mpr hg
 
 attribute [to_additive existing] faithfulSMul
 
@@ -199,8 +195,7 @@ variable (n) in
 /-- The equivariant map from embeddings of `Fin n` (aka arrangement) to combinations. -/
 @[to_additive /-- The equivariant map from embeddings of `Fin n`
   (aka arrangements) to combinations. -/]
-def mulActionHom_of_embedding [DecidableEq α] :
-    (Fin n ↪ α) →[G] n.Combination α where
+def mulActionHom_of_embedding : (Fin n ↪ α) →[G] n.Combination α where
   toFun f := ⟨Finset.univ.map f, by rw [mem_iff, Finset.card_map, Finset.card_fin]⟩
   map_smul' g f := by
     rw [← Subtype.coe_inj, Subtype.coe_mk, coe_smul,
@@ -209,48 +204,58 @@ def mulActionHom_of_embedding [DecidableEq α] :
     simp [toPerm]
 
 @[to_additive]
-theorem coe_mulActionHom_of_embedding [DecidableEq α] (f : Fin n ↪ α) :
+theorem coe_mulActionHom_of_embedding (f : Fin n ↪ α) :
     ↑((mulActionHom_of_embedding G α n).toFun f) = Finset.univ.map f :=
   rfl
 
 @[to_additive]
-theorem mulActionHom_of_embedding_surjective [DecidableEq α] :
+theorem mulActionHom_of_embedding_surjective :
     Function.Surjective (mulActionHom_of_embedding G α n) := by
   intro ⟨s, hs⟩
   obtain ⟨f : Fin n ↪ α, hf⟩ :=
     Function.Embedding.exists_of_card_eq_finset (by rw [hs, Fintype.card_fin])
   exact ⟨f, Subtype.ext hf⟩
 
+end
+
+variable (α n)
+
+theorem coe_finset [Fintype α] :
+    n.Combination α = Finset.powersetCard n (Finset.univ : Finset α) := by
+  ext; simp
+
+instance [Finite α] : Finite (n.Combination α) := by
+  have : Fintype α := Fintype.ofFinite α
+  simpa [coe_finset] using Subtype.finite
+
 protected theorem card :
     Nat.card (n.Combination α) = (Nat.card α).choose n := by
   classical
   cases fintypeOrInfinite α
-  · suffices n.Combination α = Finset.powersetCard n (Finset.univ : Finset α) by
-      simp [this]
-    ext; simp
+  · simp [coe_finset]
   · rcases n with _ | n
     · simp [Combination]
     · rcases finite_or_infinite (Combination α (n + 1)) with hc | hc
       · refine (Infinite.false (α := (Combination α (n + 1) → Combination α (n + 1))) ?_).elim
-        have : FaithfulSMul (Equiv.Perm α) (Combination α (n + 1)) :=
+        have : FaithfulSMul (Perm α) (Combination α (n + 1)) :=
           Nat.Combination.faithfulSMul (le_add_left 1 n) (by simp)
         exact (Infinite.false (α := (Combination α (n + 1) → Combination α (n + 1)))
-          (Infinite.of_injective _ (smul_left_injective' (M := Equiv.Perm α)))).elim
+          (Infinite.of_injective _ (smul_left_injective' (M := Perm α)))).elim
       · simp
 
-variable {α} in
+variable {α n}
+
 /-- If `0 < n < ENat.card α`, then `n.Combination α` is nontrivial. -/
 theorem nontrivial (h1 : 0 < n) (h2 : n < ENat.card α) :
     Nontrivial (n.Combination α) := by
   classical
   have h : Nontrivial α :=
     (ENat.one_lt_card_iff_nontrivial α).mp (lt_of_le_of_lt (one_le_cast.mpr h1) h2)
-  have : FaithfulSMul (Equiv.Perm α) (Combination α n) := Nat.Combination.faithfulSMul h1 h2
-  have h := (smul_left_injective' (M := Equiv.Perm α) (α := Combination α n)).nontrivial
+  have : FaithfulSMul (Perm α) (Combination α n) := faithfulSMul h1 h2
+  have h := (smul_left_injective' (M := Perm α) (α := Combination α n)).nontrivial
   contrapose! h
   infer_instance
 
-variable {α} in
 /-- A variant of `Nat.Combination.nontrivial` that uses `Nat.card`. -/
 theorem nontrivial' (h1 : 0 < n) (h2 : n < Nat.card α) :
     Nontrivial (n.Combination α) := by
@@ -260,32 +265,30 @@ theorem nontrivial' (h1 : 0 < n) (h2 : n < Nat.card α) :
 
 theorem eq_empty_iff [Finite α] :
     n.Combination α = ∅ ↔ Nat.card α < n := by
-  suffices n.Combination α = ∅ ↔ Nat.card (Combination α n) = 0 by
-    rw [this, Combination.card, Nat.choose_eq_zero_iff]
-  have : Fintype α := Fintype.ofFinite α
-  rw [card_coe_set_eq, ← Set.ncard_eq_zero (Set.toFinite _)]
+  rw [← Set.ncard_eq_zero, ← card_coe_set_eq, Combination.card, Nat.choose_eq_zero_iff]
 
 theorem nontrivial_iff [Finite α] :
     Nontrivial (n.Combination α) ↔ 0 < n ∧ n < Nat.card α := by
-  have : Fintype α := Fintype.ofFinite α
-  constructor
-  · rw [← Finite.one_lt_card_iff_nontrivial, ← not_imp_not,
-    not_and_or]
-    simp only [not_lt, Combination.card, Nat.card_eq_fintype_card]
-    rintro (h | h)
-    · simp only [nonpos_iff_eq_zero] at h
-      simp [h]
-    · rcases eq_or_lt_of_le h with h | h
-      · simp [h]
-      · simp [Nat.choose_eq_zero_of_lt h]
-  · exact fun h ↦ nontrivial' h.1 h.2
+  rw [← Finite.one_lt_card_iff_nontrivial, Combination.card, Nat.one_lt_iff_ne_zero_and_ne_one,
+    ne_eq, Nat.choose_eq_zero_iff, ne_eq, Nat.choose_eq_one_iff]
+  grind
+
+variable (α) in
+theorem infinite (h : 0 < n) [Infinite α] : Infinite (n.Combination α) := by
+  apply Or.resolve_left
+  · rwa [← Nat.card_eq_zero, Nat.Combination.card, card_eq_zero_of_infinite, choose_eq_zero_iff]
+  · suffices Nontrivial (n.Combination α) by
+      exact not_isEmpty_of_nonempty ↑(Combination α n)
+    apply nontrivial h
+    simp
+
+variable [DecidableEq α]
+
 section
 
-end
+variable (α)
 
-section
-
-variable [DecidableEq α] [Fintype α] {m : ℕ} (hm : m + n = Fintype.card α)
+variable [Fintype α] {m : ℕ} (hm : m + n = Fintype.card α)
 include hm
 
 /-- The complement of a combination, as an equivariant map. -/
@@ -319,45 +322,44 @@ theorem compl_bijective :
 
 end
 
+variable (α)
+
 /-- The obvious map from a type to its 1-combinations, as an equivariant map. -/
 @[to_additive /-- The obvious map from a type to its 1-combinations, as an equivariant map. -/]
-def mulActionHom_singleton [DecidableEq α] :
-    α →[G] Nat.Combination α 1 where
+def mulActionHom_singleton : α →[G] Nat.Combination α 1 where
   toFun x := ⟨{x}, Finset.card_singleton x⟩
   map_smul' _ _ := rfl
 
 @[to_additive]
-theorem mulActionHom_singleton_bijective [DecidableEq α] :
+theorem mulActionHom_singleton_bijective :
     Function.Bijective (mulActionHom_singleton G α) := by
   refine ⟨fun a b h ↦ Finset.singleton_injective congr($h.1), fun ⟨s, hs⟩ ↦ ?_⟩
   obtain ⟨a, rfl⟩ := Finset.card_eq_one.mp hs
   exact ⟨a, rfl⟩
-
-variable [DecidableEq α]
 
 @[to_additive isPretransitive_of_isMultiplyPretransitive']
 theorem isPretransitive_of_isMultiplyPretransitive (h : IsMultiplyPretransitive G α n) :
     IsPretransitive G (n.Combination α) :=
   IsPretransitive.of_surjective_map (mulActionHom_of_embedding_surjective G α) h
 
-theorem isPretransitive : IsPretransitive (Equiv.Perm α) (n.Combination α) :=
-  isPretransitive_of_isMultiplyPretransitive _ _
-    (Equiv.Perm.isMultiplyPretransitive α n)
+theorem isPretransitive : IsPretransitive (Perm α) (n.Combination α) :=
+  isPretransitive_of_isMultiplyPretransitive _ _ (isMultiplyPretransitive α n)
+
+variable {α}
 
 /-- The action of `Equiv.Perm α` on `n.Combination α` is preprimitive
 provided `1 ≤ n < #α` and `#α ≠ 2 * n`.
 
 This is a consequence that the stabilizer of such a combination
 is a maximal subgroup. -/
-theorem isPreprimitive_perm
-    {n : ℕ} (h_one_le : 1 ≤ n) (hn : n < Nat.card α)
+theorem isPreprimitive_perm {n : ℕ} (h_one_le : 1 ≤ n) (hn : n < Nat.card α)
     (hα : Nat.card α ≠ 2 * n) :
     IsPreprimitive (Perm α) (n.Combination α) := by
   -- The finiteness of `α` follows from the assumptions of the theorem.
   have : Finite α := Nat.finite_of_card_ne_zero (Nat.ne_zero_of_lt hn)
   have : Fintype α := Fintype.ofFinite α
   -- The action is pretransitive.
-  have : IsPretransitive (Equiv.Perm α) (n.Combination α) := Combination.isPretransitive α
+  have : IsPretransitive (Perm α) (n.Combination α) := Combination.isPretransitive α
   -- The type on which the group acts is nontrivial.
   have : Nontrivial (n.Combination α) := Combination.nontrivial' h_one_le hn
   obtain ⟨s⟩ := this.to_nonempty
@@ -380,8 +382,7 @@ theorem isPreprimitive_perm
 If `Nat.card α ≤ 2`, then `alternatinGroup α` is trivial, and
 the result only holds in the trivial case where `n.Combination α` is a subsingleton,
 that is, when `n = 0` or `Nat.card α ≤ n`. -/
-theorem isPretransitive_alternatingGroup
-    {α : Type*} [DecidableEq α] [Fintype α] (hα : 3 ≤ Nat.card α) :
+theorem isPretransitive_alternatingGroup [Fintype α] (hα : 3 ≤ Nat.card α) :
     IsPretransitive (alternatingGroup α) (n.Combination α) := by
   wlog! hn : 2 * n ≤ Nat.card α
   · have : IsPretransitive (alternatingGroup α) (Combination α (Nat.card α - n)) := by
@@ -396,9 +397,6 @@ theorem isPretransitive_alternatingGroup
       rw [← Finite.card_le_one_iff_subsingleton, Combination.card,
         Nat.choose_eq_zero_iff.mpr hn']
       simp
-    apply IsPretransitive.of_surjective_map
-      (compl_bijective (alternatingGroup α) α _).surjective this
-    aesop
   apply isPretransitive_of_isMultiplyPretransitive
   rcases eq_or_ne n 0 with rfl | hn0
   · infer_instance
@@ -410,22 +408,11 @@ theorem isPretransitive_alternatingGroup
 
 /-- The action of `alternatingGroup α` on `n.Combination α` is preprimitive
 provided `1 ≤ n < card α` and `card α ≠ 2 * n`. -/
-theorem isPreprimitive_alternatingGroup
-    {α : Type*} [DecidableEq α] [Fintype α]
-    {n : ℕ} (h_three_le : 3 ≤ n) (hn : n < Fintype.card α)
-    (hα : Fintype.card α ≠ 2 * n) :
+theorem isPreprimitive_alternatingGroup [Fintype α] {n : ℕ}
+    (h_three_le : 3 ≤ n) (hn : n < Nat.card α) (hα : Nat.card α ≠ 2 * n) :
     IsPreprimitive (alternatingGroup α) (n.Combination α) := by
-  rcases subsingleton_or_nontrivial α with hα | hα_nontrivial
-  · suffices Subsingleton (Combination α n) by
-      exact IsPreprimitive.of_subsingleton
-    rw [← Nat.card_eq_fintype_card] at hn
-    replace hα : Nat.card α = 1 := by
-      apply le_antisymm ?_ (one_le_of_lt hn)
-      rwa [Finite.card_le_one_iff_subsingleton]
-    rw [← Finite.card_le_one_iff_subsingleton, Combination.card]
-    aesop
   have : IsPretransitive (alternatingGroup α) (n.Combination α) :=
-    isPretransitive_alternatingGroup (le_trans h_three_le (by simp [hn.le]))
+    isPretransitive_alternatingGroup (le_trans h_three_le hn.le)
   have : Nontrivial (n.Combination α) := by
     apply Combination.nontrivial'
     · grind
@@ -435,7 +422,8 @@ theorem isPreprimitive_alternatingGroup
   apply alternatingGroup.isCoatom_stabilizer
   · rw [Combination.coe_nonempty_iff]
     exact le_trans (by norm_num) h_three_le
-  · simp [Set.nonempty_compl, Set.eq_univ_iff_ncard, ncard_eq, hn.ne]
-  · simpa [ncard_eq]
+  · simp only [Set.nonempty_compl, ne_eq, Set.eq_univ_iff_ncard, ncard_eq]
+    exact ne_of_lt hn
+  · simpa only [ncard_eq]
 
 end Nat.Combination
