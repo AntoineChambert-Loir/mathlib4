@@ -109,12 +109,12 @@ variable [DecidableEq α]
 variable (α n) in
 /-- `Set.powersetCard α n` as a `SubMulAction` of `Finset α`. -/
 @[to_additive /--`Set.powersetCard α n` as a `SubAddAction` of `Finsetα`.-/]
-def subMulAction : SubMulAction G (Finset α) where
-  carrier := powersetCard α n
+def subMulAction [DecidableEq α] : SubMulAction G (Finset α) where
+  carrier := Set.powersetCard α n
   smul_mem' g s := (Finset.card_smul_finset g s).trans
 
 @[to_additive]
-instance : MulAction G (powersetCard α n) :=
+instance [DecidableEq α] : MulAction G (Set.powersetCard α n) :=
   (subMulAction G α n).mulAction
 
 variable {G}
@@ -285,6 +285,14 @@ theorem infinite (h : 0 < n) [Infinite α] : Infinite (powersetCard α n) := by
 
 variable [DecidableEq α]
 
+@[to_additive isPretransitive_of_isMultiplyPretransitive']
+theorem isPretransitive_of_isMultiplyPretransitive (h : IsMultiplyPretransitive G α n) :
+    IsPretransitive G (powersetCard α n) :=
+  IsPretransitive.of_surjective_map (mulActionHom_of_embedding_surjective G α) h
+
+theorem isPretransitive : IsPretransitive (Perm α) (powersetCard α n) :=
+  isPretransitive_of_isMultiplyPretransitive _ (isMultiplyPretransitive α n)
+
 section
 
 variable (α)
@@ -338,14 +346,6 @@ theorem mulActionHom_singleton_bijective :
   obtain ⟨a, rfl⟩ := Finset.card_eq_one.mp hs
   exact ⟨a, rfl⟩
 
-@[to_additive isPretransitive_of_isMultiplyPretransitive']
-theorem isPretransitive_of_isMultiplyPretransitive (h : IsMultiplyPretransitive G α n) :
-    IsPretransitive G (powersetCard α n) :=
-  IsPretransitive.of_surjective_map (mulActionHom_of_embedding_surjective G α) h
-
-theorem isPretransitive : IsPretransitive (Perm α) (powersetCard α n) :=
-  isPretransitive_of_isMultiplyPretransitive _ _ (isMultiplyPretransitive α n)
-
 variable {α}
 
 /-- The action of `Equiv.Perm α` on `powersetCard α n` is preprimitive
@@ -360,7 +360,7 @@ theorem isPreprimitive_perm {n : ℕ} (h_one_le : 1 ≤ n) (hn : n < Nat.card α
   have : Finite α := Nat.finite_of_card_ne_zero (Nat.ne_zero_of_lt hn)
   have : Fintype α := Fintype.ofFinite α
   -- The action is pretransitive.
-  have : IsPretransitive (Perm α) (powersetCard α n) := powersetCard.isPretransitive α
+  have : IsPretransitive (Perm α) (powersetCard α n) := powersetCard.isPretransitive
   -- The type on which the group acts is nontrivial.
   have : Nontrivial (powersetCard α n) := powersetCard.nontrivial' h_one_le hn
   obtain ⟨s⟩ := this.to_nonempty
