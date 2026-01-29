@@ -6,11 +6,6 @@ Authors: Antoine Chambert-Loir
 
 module
 
-public import Mathlib.GroupTheory.GroupAction.SubMulAction
-public import Mathlib.GroupTheory.GroupAction.MultipleTransitivity
-public import Mathlib.GroupTheory.GroupAction.Embedding
-public import Mathlib.GroupTheory.GroupAction.Basic
-public import Mathlib.GroupTheory.Perm.MaximalSubgroups
 public import Mathlib.GroupTheory.SpecificGroups.Alternating.MaximalSubgroups
 
 /-! # Combinations
@@ -413,10 +408,7 @@ theorem isPreprimitive_alternatingGroup [Fintype α] {n : ℕ}
     IsPreprimitive (alternatingGroup α) (n.Combination α) := by
   have : IsPretransitive (alternatingGroup α) (n.Combination α) :=
     isPretransitive_alternatingGroup (le_trans h_three_le hn.le)
-  have : Nontrivial (n.Combination α) := by
-    apply Combination.nontrivial'
-    · grind
-    simpa using hn
+  have : Nontrivial (n.Combination α) := nontrivial (by positivity) (by simpa using hn)
   obtain ⟨s⟩ := this.to_nonempty
   rw [← isCoatom_stabilizer_iff_preprimitive _ s, stabilizer_coe]
   apply alternatingGroup.isCoatom_stabilizer
