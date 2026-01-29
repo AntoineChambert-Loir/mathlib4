@@ -85,8 +85,7 @@ theorem coe_nonempty_iff {s : Nat.Combination α n} :
 
 theorem coe_nontrivial_iff {s : Nat.Combination α n} :
     (s : Set α).Nontrivial ↔ 1 < n := by
-  rw [← coe_coe, Finset.nontrivial_coe, ← one_lt_card_iff_nontrivial,
-    card_eq]
+  rw [← coe_coe, Finset.nontrivial_coe, ← one_lt_card_iff_nontrivial, card_eq]
 
 theorem eq_iff_subset : s = t ↔ (s : Finset α) ⊆ (t : Finset α) := by
   rw [Finset.subset_iff_eq_of_card_le (t.prop.trans_le s.prop.ge), Subtype.ext_iff]
@@ -121,6 +120,7 @@ theorem coe_smul [DecidableEq α] {n : ℕ} {g : G} {s : n.Combination α} :
     ((g • s : n.Combination α) : Finset α) = g • s :=
   SubMulAction.val_smul (p := subMulAction G α n) g s
 
+@[to_additive addAction_stabilizer_coe]
 theorem stabilizer_coe [DecidableEq α] {n : ℕ} (s : n.Combination α) :
     stabilizer G s = stabilizer G (s : Set α) := by
   ext g
@@ -354,16 +354,12 @@ theorem isPreprimitive_perm
     (hα : Nat.card α ≠ 2 * n) :
     IsPreprimitive (Perm α) (n.Combination α) := by
   -- The finiteness of `α` follows from the assumptions of the theorem.
-  have : Finite α := Nat.finite_of_card_ne_zero (fun h ↦ by
-    simp [h] at hn)
+  have : Finite α := Nat.finite_of_card_ne_zero (Nat.ne_zero_of_lt hn)
   have : Fintype α := Fintype.ofFinite α
   -- The action is pretransitive.
-  have : IsPretransitive (Equiv.Perm α) (n.Combination α) :=
-    Combination.isPretransitive α
+  have : IsPretransitive (Equiv.Perm α) (n.Combination α) := Combination.isPretransitive α
   -- The type on which the group acts is nontrivial.
-  have : Nontrivial (n.Combination α) := by
-    apply Combination.nontrivial' h_one_le
-    simpa using hn
+  have : Nontrivial (n.Combination α) := Combination.nontrivial' h_one_le hn
   obtain ⟨s⟩ := this.to_nonempty
   -- It remains to prove that stabilizer of some point is maximal.
   rw [← isCoatom_stabilizer_iff_preprimitive _ s]
@@ -374,11 +370,10 @@ theorem isPreprimitive_perm
   -- `s` is nonempty because `n ≠ 0`.
   · rwa [Combination.coe_nonempty_iff]
   -- `sᶜ` is nonempty because `n < Nat.card α`.
-  · simpa [← Nat.Combination.coe_coe, ← Finset.coe_compl, Finset.coe_nonempty,
-      ← Finset.card_compl_lt_iff_nonempty, Combination.card_eq,
-      ← Nat.card_eq_fintype_card]
+  · rw [Set.nonempty_compl, ne_eq, Set.eq_univ_iff_ncard, ncard_eq]
+    exact hn.ne
   -- `Nat.card α ≠ 2 * s.ncard` because `Nat.card α ≠ 2 * s`.
-  · rwa [← Nat.Combination.coe_coe, Set.ncard_coe_finset, Combination.card_eq]
+  · rwa [ncard_eq]
 
 /-- If `3 ≤ Nat.card α`, then `alternatingGroup α` acts transitively on `n.Combination α`.
 
@@ -391,10 +386,11 @@ theorem isPretransitive_alternatingGroup
   wlog! hn : 2 * n ≤ Nat.card α
   · have : IsPretransitive (alternatingGroup α) (Combination α (Nat.card α - n)) := by
       apply this hα
-      rw [Nat.mul_sub, Nat.sub_le_iff_le_add, two_mul]
-      simp only [add_le_add_iff_left]
-      exact hn.le
-    wlog hn' : n ≤ Nat.card α
+      grind
+    by_cases hn' : n ≤ Nat.card α
+    · apply IsPretransitive.of_surjective_map
+        (compl_bijective (alternatingGroup α) α _).surjective this
+      aesop
     · suffices Subsingleton (Combination α n) by infer_instance
       rw [not_le] at hn'
       rw [← Finite.card_le_one_iff_subsingleton, Combination.card,
@@ -403,29 +399,17 @@ theorem isPretransitive_alternatingGroup
     apply IsPretransitive.of_surjective_map
       (compl_bijective (alternatingGroup α) α _).surjective this
     aesop
-  by_cases hn' : n = 0
-  · suffices Subsingleton (Nat.Combination α n) by
-      infer_instance
-    rw [← Finite.card_le_one_iff_subsingleton, Combination.card, hn']
-    simp
-  by_cases hn' : n = 1
-  · rw [hn']
-    apply IsPretransitive.of_surjective_map
-      (mulActionHom_singleton_bijective (alternatingGroup α) α).surjective
-    refine alternatingGroup.isPretransitive_of_three_le_card α hα
-  · have hn' : 2 ≤ n := by grind
-    apply IsPretransitive.of_surjective_map
-      (mulActionHom_of_embedding_surjective (alternatingGroup α) α)
-    have : IsMultiplyPretransitive (alternatingGroup α) α (Nat.card α -2) :=
-      alternatingGroup.isMultiplyPretransitive α
-    apply isMultiplyPretransitive_of_le (n := Nat.card α - 2)
-    · rw [Nat.le_sub_iff_add_le]
-      · apply le_trans (by grind) hn
-      · grind
-    · simp
+  apply isPretransitive_of_isMultiplyPretransitive
+  rcases eq_or_ne n 0 with rfl | hn0
+  · infer_instance
+  rcases eq_or_ne n 1 with rfl | hn1
+  · rw [is_one_pretransitive_iff]
+    exact alternatingGroup.isPretransitive_of_three_le_card α hα
+  have := alternatingGroup.isMultiplyPretransitive α
+  apply isMultiplyPretransitive_of_le (n := Nat.card α - 2) <;> grind
 
 /-- The action of `alternatingGroup α` on `n.Combination α` is preprimitive
-provided 1 ≤ n < #α and #α ≠ 2*n -/
+provided `1 ≤ n < card α` and `card α ≠ 2 * n`. -/
 theorem isPreprimitive_alternatingGroup
     {α : Type*} [DecidableEq α] [Fintype α]
     {n : ℕ} (h_three_le : 3 ≤ n) (hn : n < Fintype.card α)
@@ -447,18 +431,11 @@ theorem isPreprimitive_alternatingGroup
     · grind
     simpa using hn
   obtain ⟨s⟩ := this.to_nonempty
-  rw [← isCoatom_stabilizer_iff_preprimitive _ s]
-  suffices stabilizer (alternatingGroup α) s = stabilizer (alternatingGroup α) (s : Set α) by
-    rw [this]
-    apply alternatingGroup.isCoatom_stabilizer
-    · rw [Combination.coe_nonempty_iff]
-      exact le_trans (by norm_num) h_three_le
-    · simpa [← Nat.Combination.coe_coe, ← Finset.coe_compl, Finset.coe_nonempty,
-        ← Finset.card_compl_lt_iff_nonempty, Combination.card_eq]
-    · contrapose hα
-      rw [← Nat.card_eq_fintype_card, hα, Nat.mul_left_cancel_iff (by norm_num),
-        ← Nat.Combination.coe_coe, Set.ncard_coe_finset, Combination.card_eq]
-  ext g
-  simp [mem_stabilizer_iff, ← Subtype.coe_inj, ← Finset.coe_inj]
+  rw [← isCoatom_stabilizer_iff_preprimitive _ s, stabilizer_coe]
+  apply alternatingGroup.isCoatom_stabilizer
+  · rw [Combination.coe_nonempty_iff]
+    exact le_trans (by norm_num) h_three_le
+  · simp [Set.nonempty_compl, Set.eq_univ_iff_ncard, ncard_eq, hn.ne]
+  · simpa [ncard_eq]
 
 end Nat.Combination
