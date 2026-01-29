@@ -176,9 +176,8 @@ theorem mulAction_faithful {G : Type*} [Group G] [MulAction G α] {n : ℕ}
   · simp only [Equiv.ext_iff, MulAction.toPerm_apply] at h ⊢
     simp [Subtype.ext_iff, Finset.ext_iff, mem_smul_finset, h]
 
-/-- If a group `G` acts faithfully on `α`,
-then it acts faithfull on `powersetCard α n`,
-provided `1 ≤ n < ENat.card α`. -/
+/-- If a group `G` acts faithfully on `α`, then 
+it acts faithfull on `powersetCard α n` provided `1 ≤ n < ENat.card α`. -/
 theorem faithfulSMul (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulSMul G α] :
     FaithfulSMul G (powersetCard α n) := by
   rw [faithfulSMul_iff]
@@ -335,7 +334,7 @@ variable (α)
 
 /-- The obvious map from a type to its 1-combinations, as an equivariant map. -/
 @[to_additive /-- The obvious map from a type to its 1-combinations, as an equivariant map. -/]
-def mulActionHom_singleton : α →[G] Set.powersetCard α 1 where
+def mulActionHom_singleton : α →[G] powersetCard α 1 where
   toFun x := ⟨{x}, Finset.card_singleton x⟩
   map_smul' _ _ := rfl
 
@@ -348,8 +347,8 @@ theorem mulActionHom_singleton_bijective :
 
 variable {α}
 
-/-- The action of `Equiv.Perm α` on `powersetCard α n` is preprimitive
-provided `1 ≤ n < #α` and `#α ≠ 2 * n`.
+/-- The action of `Equiv.Perm α` on `Set.powersetCard α n` is preprimitive
+provided `1 ≤ n < Nat.card α` and `Nat.card α ≠ 2 * n`.
 
 This is a consequence that the stabilizer of such a combination
 is a maximal subgroup. -/
@@ -378,7 +377,7 @@ theorem isPreprimitive_perm {n : ℕ} (h_one_le : 1 ≤ n) (hn : n < Nat.card α
   -- `Nat.card α ≠ 2 * s.ncard` because `Nat.card α ≠ 2 * s`.
   · rwa [ncard_eq]
 
-/-- If `3 ≤ Nat.card α`, then `alternatingGroup α` acts transitively on `powersetCard α n`.
+/-- If `3 ≤ Nat.card α`, then `alternatingGroup α` acts transitively on `Set.powersetCard α n`.
 
 If `Nat.card α ≤ 2`, then `alternatinGroup α` is trivial, and
 the result only holds in the trivial case where `powersetCard α n` is a subsingleton,
@@ -407,8 +406,8 @@ theorem isPretransitive_alternatingGroup [Fintype α] (hα : 3 ≤ Nat.card α) 
   have := alternatingGroup.isMultiplyPretransitive α
   apply isMultiplyPretransitive_of_le (n := Nat.card α - 2) <;> grind
 
-/-- The action of `alternatingGroup α` on `powersetCard α n` is preprimitive
-provided `1 ≤ n < card α` and `card α ≠ 2 * n`. -/
+/-- The action of `alternatingGroup α` on `Set.powersetCard α n` is preprimitive
+provided `1 ≤ n < Nat.card α` and `Nat.card α ≠ 2 * n`. -/
 theorem isPreprimitive_alternatingGroup [Fintype α] {n : ℕ}
     (h_three_le : 3 ≤ n) (hn : n < Nat.card α) (hα : Nat.card α ≠ 2 * n) :
     IsPreprimitive (alternatingGroup α) (powersetCard α n) := by
