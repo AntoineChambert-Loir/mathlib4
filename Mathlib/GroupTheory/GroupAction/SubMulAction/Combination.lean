@@ -176,7 +176,7 @@ theorem mulAction_faithful {G : Type*} [Group G] [MulAction G α] {n : ℕ}
   · simp only [Equiv.ext_iff, MulAction.toPerm_apply] at h ⊢
     simp [Subtype.ext_iff, Finset.ext_iff, mem_smul_finset, h]
 
-/-- If a group `G` acts faithfully on `α`, then 
+/-- If a group `G` acts faithfully on `α`, then
 it acts faithfull on `powersetCard α n` provided `1 ≤ n < ENat.card α`. -/
 theorem faithfulSMul (hn : 1 ≤ n) (hα : n < ENat.card α) [FaithfulSMul G α] :
     FaithfulSMul G (powersetCard α n) := by
