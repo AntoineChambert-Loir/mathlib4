@@ -109,12 +109,12 @@ variable [DecidableEq α]
 variable (α n) in
 /-- `Set.powersetCard α n` as a `SubMulAction` of `Finset α`. -/
 @[to_additive /--`Set.powersetCard α n` as a `SubAddAction` of `Finsetα`.-/]
-def subMulAction [DecidableEq α] : SubMulAction G (Finset α) where
+def subMulAction : SubMulAction G (Finset α) where
   carrier := Set.powersetCard α n
   smul_mem' g s := (Finset.card_smul_finset g s).trans
 
 @[to_additive]
-instance [DecidableEq α] : MulAction G (Set.powersetCard α n) :=
+instance : MulAction G (Set.powersetCard α n) :=
   (subMulAction G α n).mulAction
 
 variable {G}
