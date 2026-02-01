@@ -159,8 +159,7 @@ theorem faithfulVAdd {G : Type*} [AddGroup G] [AddAction G α] {n : ℕ}
   rw [AddAction.toPerm_zero, ← addAction_faithful hn hα]
   exact Perm.ext_iff.mpr hg
 
-theorem mulAction_faithful {G : Type*} [Group G] [MulAction G α] {n : ℕ}
-    (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
+theorem mulAction_faithful (hn : 1 ≤ n) (hα : n < ENat.card α) {g : G} :
     MulAction.toPerm g = (1 : Perm (powersetCard α n)) ↔ MulAction.toPerm g = (1 : Perm α) := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · contrapose h with h
