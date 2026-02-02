@@ -242,6 +242,23 @@ theorem closure_cycleType_eq_2_2_eq_alternatingGroup (h5 : 5 ≤ Nat.card α) :
     · apply Subgroup.subset_closure
       exact cycleType_swap_mul_swap_of_nodup (by grind [Finset.mem_compl])
 
+theorem closure_isCycleType22_eq_top (h5 : 5 ≤ Nat.card α) :
+    Subgroup.closure {g : alternatingGroup α | (g : Perm α).cycleType = {2, 2}} = ⊤ := by
+  apply Subgroup.map_injective (alternatingGroup α).subtype_injective
+  rw [MonoidHom.map_closure]
+  suffices (alternatingGroup α).subtype ''
+    { g | (g : Perm α).cycleType = {2, 2} } =
+      { g : Perm α | g.cycleType = {2, 2} } by
+    rw [this, closure_cycleType_eq_2_2_eq_alternatingGroup h5]
+    aesop
+  ext g
+  refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, by
+    -- `exact hg.mem_alternatingGroup` used to work
+    simp only [Set.mem_setOf_eq] at hg
+    suffices (-1 : ℤˣ) ^ 6 = 1 by
+      simp [this, mem_alternatingGroup, sign_of_cycleType, hg]
+    rw [Even.neg_pow ⟨3, by norm_num⟩, one_pow]⟩, by simpa⟩⟩
+
 /-- A key lemma to prove $A_5$ is simple. Shows that any normal subgroup of an alternating group on
   at least 5 elements is the entire alternating group if it contains a 3-cycle. -/
 theorem IsThreeCycle.alternating_normalClosure (h5 : 5 ≤ Fintype.card α) {f : Perm α}
