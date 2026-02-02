@@ -223,7 +223,7 @@ def iwasawaStructure_four (h5 : 5 ≤ Nat.card α) :
     apply Subgroup.map_isMulCommutative
   is_conj g s := map_kleinFour_conj s.val s.prop g
   is_generator := by
-    rw [eq_top_iff, ← closure_isCycleType22_eq_top h5, Subgroup.closure_le]
+    rw [eq_top_iff, ← closure_cycleType_eq_two_two_eq_top h5, Subgroup.closure_le]
     intro g hg
     simp only [Set.mem_setOf_eq] at hg
     simp only [SetLike.mem_coe]

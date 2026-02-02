@@ -209,7 +209,7 @@ theorem closure_three_cycles_eq_alternating :
           (hl b (List.mem_cons_of_mem a List.mem_cons_self)))
         (ih _ (fun g hg => hl g (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ hg))) hn)
 
-theorem closure_isThreeCycles_eq_top :
+theorem _root_.alternatingGroup.closure_isThreeCycles_eq_top :
     Subgroup.closure {g : alternatingGroup α | Equiv.Perm.IsThreeCycle (g : Equiv.Perm α)} = ⊤ := by
   apply Subgroup.map_injective (alternatingGroup α).subtype_injective
   rw [MonoidHom.map_closure]
@@ -221,7 +221,7 @@ theorem closure_isThreeCycles_eq_top :
   refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, hg.mem_alternatingGroup⟩, by simpa⟩⟩
 
 /-- The alternating group is the closure of the set of permutations with cycle type (2, 2). -/
-theorem closure_cycleType_eq_2_2_eq_alternatingGroup (h5 : 5 ≤ Nat.card α) :
+theorem closure_cycleType_eq_two_two_eq_alternatingGroup (h5 : 5 ≤ Nat.card α) :
     Subgroup.closure {g : Perm α | g.cycleType = {2, 2}} = alternatingGroup α := by
   apply le_antisymm
   · rw [Subgroup.closure_le]
@@ -242,14 +242,14 @@ theorem closure_cycleType_eq_2_2_eq_alternatingGroup (h5 : 5 ≤ Nat.card α) :
     · apply Subgroup.subset_closure
       exact cycleType_swap_mul_swap_of_nodup (by grind [Finset.mem_compl])
 
-theorem closure_isCycleType22_eq_top (h5 : 5 ≤ Nat.card α) :
+theorem _root_.alternatingGroup.closure_cycleType_eq_two_two_eq_top (h5 : 5 ≤ Nat.card α) :
     Subgroup.closure {g : alternatingGroup α | (g : Perm α).cycleType = {2, 2}} = ⊤ := by
   apply Subgroup.map_injective (alternatingGroup α).subtype_injective
   rw [MonoidHom.map_closure]
   suffices (alternatingGroup α).subtype ''
     { g | (g : Perm α).cycleType = {2, 2} } =
       { g : Perm α | g.cycleType = {2, 2} } by
-    rw [this, closure_cycleType_eq_2_2_eq_alternatingGroup h5]
+    rw [this, closure_cycleType_eq_two_two_eq_alternatingGroup h5]
     aesop
   ext g
   refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, by
