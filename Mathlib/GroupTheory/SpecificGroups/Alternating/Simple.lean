@@ -15,9 +15,9 @@ public import Mathlib.GroupTheory.SpecificGroups.Alternating.MaximalSubgroups
 /-! # The alternating group is simple
 
 * `Equiv.Perm.iwasawaStructure_two`:
-  the natural `IwasawaStructure` of `Equiv.Perm α` acting on `Nat.Combination α 2`
+  the natural `IwasawaStructure` of `Equiv.Perm α` acting on `Set.powersetCard α 2`
   Its commutative subgroups consist of the permutations with support
-  in a given element of `Nat.Combination α 2`.
+  in a given element of `Set.powersetCard α 2`.
   They are cyclic of order 2.
 
 * `alternatingGroup_of_le_of_normal`:
@@ -25,17 +25,17 @@ public import Mathlib.GroupTheory.SpecificGroups.Alternating.MaximalSubgroups
   of `Equiv.Perm α` contains the alternating group.
 
 * `alternatingGroup.iwasawaStructure_three`:
-  the natural `IwasawaStructure` of `alternatingGroup α` acting on `Nat.Combination α 3`
+  the natural `IwasawaStructure` of `alternatingGroup α` acting on `Set.powersetCard α 3`
 
   Its commutative subgroups consist of the permutations with support
-  in a given element of `Nat.Combination α 2`.
+  in a given element of `Set.powersetCard α 2`.
   They are cyclic of order 3.
 
 * `alternatingGroup.iwasawaStructure_three`:
-  the natural `IwasawaStructure` of `alternatingGroup α` acting on `Nat.Combination α 4`
+  the natural `IwasawaStructure` of `alternatingGroup α` acting on `Set.powersetCard α 4`
 
   Its commutative subgroups consist of the permutations of
-  cycleType (2, 2) with support in a given element of `Nat.Combination α 2`.
+  cycleType (2, 2) with support in a given element of `Set.powersetCard α 2`.
   They have order 4 and exponent 2 (`IsKleinFour`).
 
 * `alternatingGroup.normal_subgroup_eq_bot_or_eq_top`:
@@ -70,10 +70,10 @@ theorem conj_smul_range_ofSubtype
   rw [MulAut.conj_apply, Equiv.Perm.support_conj]
   simp [← Set.image_smul, Perm.smul_def]
 
-/-- The Iwasawa structure of `Perm α` acting on `Nat.Combination α 2`. -/
+/-- The Iwasawa structure of `Perm α` acting on `Set.powersetCard α 2`. -/
 def iwasawaStructure_two [∀ s : Set α, DecidablePred fun x ↦ x ∈ s]
 :
-    IwasawaStructure (Perm α) (Nat.Combination α 2) where
+    IwasawaStructure (Perm α) (Set.powersetCard α 2) where
   T s := (ofSubtype : Perm (s : Set α) →* Perm α).range
   is_comm s := by
     suffices IsCyclic (Perm s) by
@@ -86,7 +86,7 @@ def iwasawaStructure_two [∀ s : Set α, DecidablePred fun x ↦ x ∈ s]
     rw [eq_top_iff, ← Equiv.Perm.closure_isSwap, Subgroup.closure_le]
     intro g hg
     obtain ⟨a, b, hab, rfl⟩ := hg
-    let s : Nat.Combination α 2 := ⟨{a, b}, Finset.card_pair hab⟩
+    let s : Set.powersetCard α 2 := ⟨{a, b}, Finset.card_pair hab⟩
     apply Subgroup.mem_iSup_of_mem s
     exact ⟨swap ⟨a, by aesop⟩ ⟨b, by aesop⟩, Equiv.Perm.ofSubtype_swap_eq _ _⟩
 
@@ -99,32 +99,28 @@ theorem alternatingGroup_of_le_of_normal
   rw [Nat.card_eq_fintype_card] at hα
   rw [← alternatingGroup.commutator_perm_eq hα]
   rw [← Nat.card_eq_fintype_card] at hα
-  have : IsPreprimitive (Perm α) (Nat.Combination α 2) := by
-    apply Nat.Combination.isPreprimitive_perm α (by norm_num)
-      (lt_of_lt_of_le (by norm_num) hα)
-    intro h
-    rw [h] at hα
-    simp at hα
+  have : IsPreprimitive (Perm α) (Set.powersetCard α 2) := by
+    apply Set.powersetCard.isPreprimitive_perm (by norm_num) (lt_of_lt_of_le (by norm_num) hα)
+    aesop
   classical
   apply iwasawaStructure_two.commutator_le
   intro h
   obtain ⟨g, hgN, hg_ne⟩ := N.nontrivial_iff_exists_ne_one.mp ntN
-  suffices ∃ s : Nat.Combination α 2, g • s ≠ s by
+  suffices ∃ s : Set.powersetCard α 2, g • s ≠ s by
     obtain ⟨s, hs⟩ := this
     have := Set.mem_univ s
     rw [← h, mem_fixedPoints] at this
     apply hs
     rw [← Subgroup.mk_smul g hgN, this]
   contrapose! hg_ne
-  replace hg_ne : (toPerm g : Perm (Nat.Combination α 2)) = 1 := by
+  replace hg_ne : (toPerm g : Perm (Set.powersetCard α 2)) = 1 := by
     ext1 s
     exact hg_ne s
-  rw [Nat.Combination.mulAction_faithful (n := 2)
-    (G := Perm α) (α := α) (g := g)
+  rw [Set.powersetCard.mulAction_faithful (n := 2) (G := Perm α) (α := α) (g := g)
     (by norm_num)
     (by rw [ENat.card_eq_coe_fintype_card, Nat.cast_ofNat,
-          Nat.ofNat_lt_cast]
-        simpa using le_trans (by norm_num) hα)] at hg_ne
+          Nat.ofNat_lt_cast, ← Nat.card_eq_fintype_card]
+        exact le_trans (by norm_num) hα)] at hg_ne
   exact hg_ne
 
 end Equiv.Perm
@@ -135,7 +131,7 @@ variable {α : Type*} [DecidableEq α] [Fintype α]
 
 /-- The element of `alternatingGroup α` induced by an element
 of `alternatingGroup s`, when `s : Finset α`. -/
-def ofSubtype (s : Finset α) : -- {p : ℕ} (s : Nat.Combination α p) :
+def ofSubtype (s : Finset α) : -- {p : ℕ} (s : Set.powersetCard α p) :
     alternatingGroup s →* alternatingGroup α where
   toFun x := ⟨Perm.ofSubtype (x : Perm s), by
     rw [mem_alternatingGroup, sign_ofSubtype]
@@ -235,8 +231,8 @@ theorem closure_isCycleType22_eq_top (h5 : 5 ≤ Nat.card α) :
   simp only [Set.mem_setOf_eq] at hg
   simp [sign_of_cycleType, hg, ← Units.val_inj]
 
-/-- The Iwasawa structure of `alternatingGroup α` acting on `Nat.Combination α 3`. -/
-def iwasawaStructure_three : IwasawaStructure (alternatingGroup α) (Nat.Combination α 3) where
+/-- The Iwasawa structure of `alternatingGroup α` acting on `Set.powersetCard α 3`. -/
+def iwasawaStructure_three : IwasawaStructure (alternatingGroup α) (Set.powersetCard α 3) where
   T s := (alternatingGroup.ofSubtype s).range
   is_comm s := by
     suffices IsCyclic (alternatingGroup s) by
@@ -265,31 +261,30 @@ theorem normal_subgroup_eq_bot_or_eq_top_of_card_ne_six
   classical
   rw [or_iff_not_imp_left]
   intro hN
-  rw [Nat.card_eq_fintype_card] at hα
-  have : IsPreprimitive (alternatingGroup α) (Nat.Combination α 3) := by
-    refine Nat.Combination.isPreprimitive_alternatingGroup (by norm_num) ?_ ?_
-    · apply lt_of_lt_of_le (by norm_num) hα
+  have : IsPreprimitive (alternatingGroup α) (Set.powersetCard α 3) := by
+    refine Set.powersetCard.isPreprimitive_alternatingGroup (by norm_num) ?_ ?_
+    · exact lt_of_lt_of_le (by norm_num) hα
     · simpa using hα'
-  rw [eq_top_iff, ← commutator_alternatingGroup_eq_top hα]
+  rw [eq_top_iff, ← commutator_alternatingGroup_eq_top (by simpa using hα)]
   apply iwasawaStructure_three.commutator_le
   intro h
   simp_rw [Set.eq_univ_iff_forall, mem_fixedPoints] at h
   rw [← ne_eq, ← Subgroup.nontrivial_iff_ne_bot, Subgroup.nontrivial_iff_exists_ne_one] at hN
   obtain ⟨g, hgN, hg_ne⟩ := hN
-  suffices ∃ s : Nat.Combination α 3, g • s ≠ s by
+  suffices ∃ s : Set.powersetCard α 3, g • s ≠ s by
     obtain ⟨s, hs⟩ := this
     apply hs
     rw [← Subgroup.mk_smul g hgN, h]
   contrapose! hg_ne
-  replace hg_ne : (toPerm g : Perm (Nat.Combination α 3)) = 1 := by
+  replace hg_ne : (toPerm g : Perm (Set.powersetCard α 3)) = 1 := by
     ext1 s
     exact hg_ne s
   rw [← Subtype.coe_inj]
-  rwa [Nat.Combination.mulAction_faithful (n := 3)
+  rwa [Set.powersetCard.mulAction_faithful (n := 3)
     (G := alternatingGroup α) (α := α) (g := g)
     (by norm_num)
     (by rw [ENat.card_eq_coe_fintype_card, Nat.cast_ofNat,
-          Nat.ofNat_lt_cast]
+          Nat.ofNat_lt_cast, ← Nat.card_eq_fintype_card]
         apply le_trans (by norm_num) hα)] at hg_ne
 
 theorem mem_map_kleinFour_ofSubtype (s : Finset α) (hs : s.card = 4) (k : alternatingGroup α) :
@@ -334,10 +329,10 @@ theorem map_kleinFour_conj (s : Finset α) (hs : s.card = 4) (g : alternatingGro
   · nth_rewrite 2 [← inv_inv g]
     rw [cycleType_conj]
 
-/-- The Iwasawa structure of `alternatingGroup α` acting on `Nat.Combination α 4`,
+/-- The Iwasawa structure of `alternatingGroup α` acting on `Set.powersetCard α 4`,
 provided `α` has at least 5 elements. -/
 def iwasawaStructure_four (h5 : 5 ≤ Nat.card α) :
-    IwasawaStructure (alternatingGroup α) (Nat.Combination α 4) where
+    IwasawaStructure (alternatingGroup α) (Set.powersetCard α 4) where
   T s := (kleinFour s).map (ofSubtype s)
   is_comm s := by
     have : IsMulCommutative (kleinFour s) :=
@@ -365,28 +360,27 @@ theorem normal_subgroup_eq_bot_or_eq_top_of_card_ne_eight
   classical
   rw [or_iff_not_imp_left]
   intro hN
-  rw [Nat.card_eq_fintype_card] at hα
-  have : IsPreprimitive (alternatingGroup α) (Nat.Combination α 4) := by
-    refine Nat.Combination.isPreprimitive_alternatingGroup (by norm_num) ?_ ?_
+  have : IsPreprimitive (alternatingGroup α) (Set.powersetCard α 4) := by
+    refine Set.powersetCard.isPreprimitive_alternatingGroup (by norm_num) ?_ ?_
     · apply lt_of_lt_of_le (by norm_num) hα
     · simpa using hα'
-  rw [eq_top_iff, ← commutator_alternatingGroup_eq_top hα]
-  rw [← Nat.card_eq_fintype_card] at hα
+  rw [eq_top_iff, ← commutator_alternatingGroup_eq_top
+    (by simpa using hα)]
   apply (iwasawaStructure_four hα).commutator_le
   intro h
   simp_rw [Set.eq_univ_iff_forall, mem_fixedPoints] at h
   rw [← ne_eq, ← Subgroup.nontrivial_iff_ne_bot, Subgroup.nontrivial_iff_exists_ne_one] at hN
   obtain ⟨g, hgN, hg_ne⟩ := hN
-  suffices ∃ s : Nat.Combination α 4, g • s ≠ s by
+  suffices ∃ s : Set.powersetCard α 4, g • s ≠ s by
     obtain ⟨s, hs⟩ := this
     apply hs
     rw [← Subgroup.mk_smul g hgN, h]
   contrapose! hg_ne
-  replace hg_ne : (toPerm g : Perm (Nat.Combination α 4)) = 1 := by
+  replace hg_ne : (toPerm g : Perm (Set.powersetCard α 4)) = 1 := by
     ext1 s
     exact hg_ne s
   rw [← Subtype.coe_inj]
-  rwa [Nat.Combination.mulAction_faithful (n := 4)
+  rwa [Set.powersetCard.mulAction_faithful (n := 4)
     (G := alternatingGroup α) (α := α) (g := g)
     (by norm_num)
     (by rw [ENat.card_eq_coe_fintype_card, Nat.cast_ofNat,
