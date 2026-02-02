@@ -96,13 +96,15 @@ theorem stabilizer.surjective_toPerm {s : Set α} (hs : sᶜ.Nontrivial) :
     rw [Perm.smul_def, ← Perm.notMem_support]
     exact (Set.disjoint_left.mp hk_support) hx
   intro g
+  -- can one use `alternatingGroup.ofSubtype`?
   rcases Int.units_eq_one_or (sign g) with hsg | hsg
-  · use! ofSubtype g
+  · use! Equiv.Perm.ofSubtype g
     · simp [mem_alternatingGroup, hsg]
     · rw [mem_stabilizer_iff, Submonoid.mk_smul]
       exact ofSubtype_mem_stabilizer g
     · aesop
-  · use! ofSubtype g * k
+  -- can one use `alternatingGroup.ofSubtype`?
+  · use! Equiv.Perm.ofSubtype g * k
     · simp [mem_alternatingGroup, hk_swap.sign_eq, hsg]
     · rw [mem_stabilizer_iff, Submonoid.mk_smul, mul_smul, hks, ofSubtype_mem_stabilizer]
     · ext x

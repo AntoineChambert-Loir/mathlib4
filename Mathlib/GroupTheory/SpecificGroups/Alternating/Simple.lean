@@ -9,8 +9,6 @@ module
 public import Mathlib.GroupTheory.GroupAction.Iwasawa
 public import Mathlib.GroupTheory.GroupAction.SubMulAction.Combination
 public import Mathlib.GroupTheory.SpecificGroups.Alternating.KleinFour
-public import Mathlib.GroupTheory.Perm.MaximalSubgroups
-public import Mathlib.GroupTheory.SpecificGroups.Alternating.MaximalSubgroups
 
 /-! # The alternating group is simple
 
@@ -56,19 +54,6 @@ open MulAction Equiv.Perm Equiv
 namespace Equiv.Perm
 
 variable {α : Type*} [DecidableEq α] [Finite α]
-
-theorem conj_smul_range_ofSubtype
-    (g : Perm α) (s : Finset α)
-    [DecidablePred fun x ↦ x ∈ g • s] [DecidablePred fun x ↦ x ∈ s] :
-    (ofSubtype : Perm { x // x ∈ ↑(g • s) } →*  Perm α).range
-      = MulAut.conj g • (ofSubtype : Perm {x // x ∈ s} →* Perm α).range := by
-  have : Fintype α := Fintype.ofFinite α
-  ext k
-  rw [Subgroup.mem_pointwise_smul_iff_inv_smul_mem]
-  simp only [mem_range_ofSubtype_iff, SetLike.setOf_mem_eq, MulAut.smul_def, ← map_inv]
-  rw [Finset.coe_smul_finset]
-  rw [MulAut.conj_apply, Equiv.Perm.support_conj]
-  simp [← Set.image_smul, Perm.smul_def]
 
 /-- The Iwasawa structure of `Perm α` acting on `Set.powersetCard α 2`. -/
 def iwasawaStructure_two [∀ s : Set α, DecidablePred fun x ↦ x ∈ s]
@@ -201,35 +186,6 @@ theorem range_ofSubtype_conj (s : Finset α) (g : alternatingGroup α) :
   simp only [Subgroup.mk_smul, MulAut.smul_def, MulAut.inv_apply,
     MulAut.conj_symm_apply, Subgroup.coe_mul, InvMemClass.coe_inv]
   rw [Equiv.Perm.support_conj_eq_smul_support', Finset.subset_smul_finset_iff]
-
--- [Mathlib.GroupTheory.SpecificGroups.Alternating]
-theorem closure_isThreeCycles_eq_top :
-    Subgroup.closure
-      {g : alternatingGroup α | Equiv.Perm.IsThreeCycle (g : Equiv.Perm α)} = ⊤ := by
-  apply Subgroup.map_injective (alternatingGroup α).subtype_injective
-  rw [MonoidHom.map_closure]
-  suffices (alternatingGroup α).subtype ''
-    { g : alternatingGroup α | (g : Perm α).IsThreeCycle } =
-      { g : Perm α | IsThreeCycle g} by
-    aesop
-  ext g
-  refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, hg.mem_alternatingGroup⟩, by simpa⟩⟩
-
--- [Mathlib.GroupTheory.SpecificGroups.Alternating]
-theorem closure_isCycleType22_eq_top (h5 : 5 ≤ Nat.card α) :
-    Subgroup.closure
-      {g : alternatingGroup α | (g : Perm α).cycleType = {2, 2} } = ⊤ := by
-  apply Subgroup.map_injective (alternatingGroup α).subtype_injective
-  rw [MonoidHom.map_closure]
-  suffices (alternatingGroup α).subtype ''
-    { g : alternatingGroup α | (g : Perm α).cycleType = {2, 2} } =
-      { g : Perm α | g.cycleType = {2, 2} } by
-    rw [this, Perm.closure_cycleType_eq_2_2_eq_alternatingGroup h5]
-    aesop
-  ext g
-  refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, ?_⟩, by simpa⟩⟩
-  simp only [Set.mem_setOf_eq] at hg
-  simp [sign_of_cycleType, hg, ← Units.val_inj]
 
 /-- The Iwasawa structure of `alternatingGroup α` acting on `Set.powersetCard α 3`. -/
 def iwasawaStructure_three : IwasawaStructure (alternatingGroup α) (Set.powersetCard α 3) where

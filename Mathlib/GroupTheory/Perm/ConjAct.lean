@@ -74,4 +74,18 @@ theorem cycleFactorsFinset_conj_eq
   simp only [inv_smul_smul]
   exact Finset.inv_smul_mem_iff
 
+omit [Fintype α] in
+theorem conj_smul_range_ofSubtype
+    [Finite α] (g : Perm α) (s : Finset α)
+    [DecidablePred fun x ↦ x ∈ g • s] [DecidablePred fun x ↦ x ∈ s] :
+    (ofSubtype : Perm { x // x ∈ ↑(g • s) } →*  Perm α).range
+      = MulAut.conj g • (ofSubtype : Perm {x // x ∈ s} →* Perm α).range := by
+  have : Fintype α := Fintype.ofFinite α
+  ext k
+  rw [Subgroup.mem_pointwise_smul_iff_inv_smul_mem]
+  simp only [mem_range_ofSubtype_iff, SetLike.setOf_mem_eq, MulAut.smul_def, ← map_inv]
+  rw [Finset.coe_smul_finset]
+  rw [MulAut.conj_apply, Equiv.Perm.support_conj]
+  simp [← Set.image_smul, Perm.smul_def]
+
 end Equiv.Perm

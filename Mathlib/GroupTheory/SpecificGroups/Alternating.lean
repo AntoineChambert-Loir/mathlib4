@@ -5,12 +5,11 @@ Authors: Aaron Anderson, Antoine Chambert-Loir
 -/
 module
 
-public import Mathlib.Algebra.Ring.CharZero
 public import Mathlib.Data.Fintype.Units
 public import Mathlib.GroupTheory.IndexNormal
+public import Mathlib.GroupTheory.Perm.ConjAct
 public import Mathlib.GroupTheory.Perm.Fin
 public import Mathlib.GroupTheory.Subgroup.Simple
-public import Mathlib.Logic.Equiv.Fin.Rotate
 public import Mathlib.Tactic.IntervalCases
 
 /-!
@@ -209,6 +208,17 @@ theorem closure_three_cycles_eq_alternating :
         (IsSwap.mul_mem_closure_three_cycles (hl a List.mem_cons_self)
           (hl b (List.mem_cons_of_mem a List.mem_cons_self)))
         (ih _ (fun g hg => hl g (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ hg))) hn)
+
+theorem closure_isThreeCycles_eq_top :
+    Subgroup.closure {g : alternatingGroup α | Equiv.Perm.IsThreeCycle (g : Equiv.Perm α)} = ⊤ := by
+  apply Subgroup.map_injective (alternatingGroup α).subtype_injective
+  rw [MonoidHom.map_closure]
+  suffices (alternatingGroup α).subtype ''
+    { g : alternatingGroup α | (g : Perm α).IsThreeCycle } =
+      { g : Perm α | IsThreeCycle g} by
+    aesop
+  ext g
+  refine ⟨fun ⟨k, _⟩ ↦ by simp_all, fun hg ↦ ⟨⟨g, hg.mem_alternatingGroup⟩, by simpa⟩⟩
 
 /-- The alternating group is the closure of the set of permutations with cycle type (2, 2). -/
 theorem closure_cycleType_eq_2_2_eq_alternatingGroup (h5 : 5 ≤ Nat.card α) :
@@ -448,6 +458,81 @@ theorem center_eq_bot (hα4 : 4 ≤ Nat.card α) :
   suffices k ∈ alternatingGroup α by
     simp only [← Subgroup.mk_smul k this, ← mul_smul, hg']
   simp [k, hc.2.symm, hd.2.symm]
+
+/-- The element of `alternatingGroup α` induced by an element
+of `alternatingGroup s`, when `s : Finset α`. -/
+def ofSubtype (s : Finset α) : -- {p : ℕ} (s : Set.powersetCard α p) :
+    alternatingGroup s →* alternatingGroup α where
+  toFun x := ⟨Perm.ofSubtype (x : Perm s), by
+    rw [mem_alternatingGroup, sign_ofSubtype]
+    -- `Subtype.fintype fun x ↦ x ∈ ↑s` is not def. eq. to `Finset.Subtype.fintype ↑s`
+    convert mem_alternatingGroup.mp x.prop⟩
+  map_mul' := by simp
+  map_one' := by simp
+
+theorem map_ofSubtype (s : Finset α) :
+    (alternatingGroup s).map (Perm.ofSubtype : Perm s →* Perm α) =
+      (Perm.ofSubtype : Perm s →* Perm α).range ⊓ (alternatingGroup α) := by
+  ext k
+  rw [Subgroup.mem_map, Subgroup.mem_inf, MonoidHom.mem_range]
+  simp only [mem_alternatingGroup]
+  refine ⟨fun ⟨x, hx, hk⟩ ↦ ?_, fun ⟨⟨x, hx⟩, hk⟩ ↦ ?_⟩
+  · refine ⟨⟨x, hk⟩, ?_⟩
+    rw [← hk, sign_ofSubtype]
+    -- `Subtype.fintype fun x ↦ x ∈ ↑s` is not def. eq. to `Finset.Subtype.fintype ↑s`
+    convert hx
+  · refine ⟨x, ?_, hx⟩
+    rw [← hx, sign_ofSubtype] at hk
+    -- `Subtype.fintype fun x ↦ x ∈ ↑s` is not def. eq. to `Finset.Subtype.fintype ↑s`
+    convert hk
+
+open Pointwise in
+lemma conj_map_subgroupOf (s : Finset α) (g : alternatingGroup α) :
+    ((alternatingGroup ↥(g • s)).map
+      Perm.ofSubtype).subgroupOf (alternatingGroup α) =
+    MulAut.conj g •
+      ((alternatingGroup ↥s).map Perm.ofSubtype).subgroupOf (alternatingGroup α) := by
+  classical
+  rcases g with ⟨g, hg⟩
+  ext ⟨k, hk⟩
+  simp only [Subgroup.mem_subgroupOf, Subgroup.mem_pointwise_smul_iff_inv_smul_mem,
+    map_ofSubtype, Subgroup.mem_inf, MulAut.smul_def,
+    MulAut.inv_apply, MulAut.conj_symm_apply, Subgroup.coe_mul, InvMemClass.coe_inv]
+  rw [← MulAut.conj_symm_apply, ← MulAut.inv_apply, ← MulAut.smul_def,
+    ← Subgroup.mem_pointwise_smul_iff_inv_smul_mem, Equiv.Perm.conj_smul_range_ofSubtype]
+  apply and_congr Iff.rfl (by simp [mul_right_comm])
+
+theorem mem_range_ofSubtype (s : Finset α) (k : alternatingGroup α) :
+    k ∈ (ofSubtype s).range ↔ (k : Perm α).support ⊆ s := by
+  constructor
+  · rintro ⟨⟨k, hk⟩, rfl⟩
+    intro x hx
+    simp only [ofSubtype, MonoidHom.coe_mk, OneHom.coe_mk,
+      support_ofSubtype] at hx
+    aesop
+  · intro hk
+    rcases k with ⟨k, hk'⟩
+    simp only at hk
+    simp only [ofSubtype, MonoidHom.mem_range, MonoidHom.coe_mk, OneHom.coe_mk, ← Subtype.coe_inj,
+      Subtype.exists, mem_alternatingGroup, exists_prop]
+    suffices k ∈ (Perm.ofSubtype : Perm s →* Perm α).range by
+      obtain ⟨k, rfl⟩ := this
+      rw [mem_alternatingGroup, sign_ofSubtype] at hk'
+      -- same `Fintype` issue
+      refine ⟨k, by convert hk', rfl⟩
+    rw [mem_range_ofSubtype_iff]
+    simpa using hk
+
+open Pointwise in
+theorem range_ofSubtype_conj (s : Finset α) (g : alternatingGroup α) :
+    (ofSubtype (g • s)).range = MulAut.conj g • (ofSubtype s).range := by
+  rcases g with ⟨g, hg⟩
+  ext ⟨k, hk⟩
+  rw [Subgroup.mem_pointwise_smul_iff_inv_smul_mem]
+  simp only [mem_range_ofSubtype]
+  simp only [Subgroup.mk_smul, MulAut.smul_def, MulAut.inv_apply,
+    MulAut.conj_symm_apply, Subgroup.coe_mul, InvMemClass.coe_inv]
+  rw [Equiv.Perm.support_conj_eq_smul_support', Finset.subset_smul_finset_iff]
 
 end alternatingGroup
 
