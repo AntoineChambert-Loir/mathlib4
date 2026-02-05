@@ -254,10 +254,11 @@ theorem mem_transvections_pow_mul_dilatransvections_of_fixedReduce_ne_smul_id
       simp only [add_assoc, Nat.reduceAdd] at h
       have : ∃ v, LinearIndependent K ![v, e.fixedReduce v] := by
         contrapose! he
-        obtain ⟨a, ha, he⟩ :=
+        obtain ⟨a, ha⟩ :=
           LinearMap.exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent
           (by simp [h]) he
-        exact ⟨a, he⟩
+        refine ⟨a, fun x ↦ by
+          simp only [← coe_toLinearMap, ha, smul_apply, one_apply, Subring.smul_def]⟩
       obtain ⟨v, hu⟩ := this
       have hu_spare := id hu
       obtain ⟨u, rfl⟩ := e.fixedSubmodule.mkQ_surjective v
