@@ -9,6 +9,7 @@ module
 public import Mathlib.LinearAlgebra.Charpoly.BaseChange
 public import Mathlib.LinearAlgebra.Dimension.FreeAndStrongRankCondition
 public import Mathlib.LinearAlgebra.Dual.BaseChange
+public import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # Transvections in a module
@@ -20,7 +21,12 @@ public import Mathlib.LinearAlgebra.Dual.BaseChange
   `LinearMap.transvection f v` is equal to `1 + f v`.
 
 * If, moreover, `f v = 0`, then `LinearEquiv.transvection` shows that it is
- a linear equivalence.
+  a linear equivalence.
+
+* `LinearMap.transvections R V`: the set of transvections.
+
+* `LinearEquiv.dilatransvections R V`: the set of linear equivalences
+  whose associated linear map is of the form `LinearMap.transvection f v`.
 
 * `LinearEquiv.transvection.det` shows that it has determinant `1`.
 
@@ -60,9 +66,7 @@ theorem apply (f : Dual R V) (v x : V) :
 
 theorem comp_of_left_eq_apply {f : Dual R V} {v w : V} {x : V} (hw : f w = 0) :
     transvection f v (transvection f w x) = transvection f (v + w) x := by
-  simp only [transvection, coe_mk, AddHom.coe_mk, map_add, map_smul,
-    hw, smul_add, zero_smul, smul_zero]
-  abel
+  simp [transvection, map_add, hw, add_assoc]
 
 theorem comp_of_left_eq {f : Dual R V} {v w : V} (hw : f w = 0) :
     (transvection f v) ∘ₗ (transvection f w) = transvection f (v + w) := by
@@ -70,9 +74,7 @@ theorem comp_of_left_eq {f : Dual R V} {v w : V} (hw : f w = 0) :
 
 theorem comp_of_right_eq_apply {f g : Dual R V} {v : V} {x : V} (hf : f v = 0) :
     (transvection f v) (transvection g v x) = transvection (f + g) v x := by
-  simp only [transvection, coe_mk, AddHom.coe_mk, map_add, map_smul,
-    hf, add_apply, zero_smul, add_smul, smul_add, smul_zero]
-  abel
+  simp [transvection, map_add, hf, add_smul, add_assoc]
 
 theorem comp_of_right_eq {f g : Dual R V} {v : V} (hf : f v = 0) :
     (transvection f v) ∘ₗ (transvection g v) = transvection (f + g) v := by
@@ -242,7 +244,7 @@ theorem transvections_pow_mono :
 
 variable (R V) in
 /-- Dilatransvections are linear equivalences `V ≃ₗ[R] V` whose associated linear map are given by
-`LinearMap.transvection`, ie, are of the form `x ↦ x + f x • v` for `f : Dual R V` and `v : V`.
+`LinearMap.transvection`, i.e., are of the form `x ↦ x + f x • v` for `f : Dual R V` and `v : V`.
 
 Over a division ring, `LinearEquiv.mem_dilatransvections_iff_rank` shows that they correspond
 to the linear equivalences which differ from the identity map by a linear map of rank at most 1. -/
@@ -265,13 +267,13 @@ theorem one_mem_dilatransvections : 1 ∈ dilatransvections R V :=
 @[simp]
 theorem symm_mem_dilatransvections_iff {e : V ≃ₗ[R] V} :
     e.symm ∈ dilatransvections R V ↔ e ∈ dilatransvections R V := by
-  suffices ∀ e ∈ dilatransvections R V, e.symm ∈ dilatransvections R V by
-    refine ⟨by simpa using this e.symm, this e⟩
+  suffices ∀ e ∈ dilatransvections R V, e.symm ∈ dilatransvections R V from
+    ⟨by simpa using this e.symm, this e⟩
   rintro e ⟨f, v, he⟩
   use f, - e.symm v
   ext x
-  simp only [coe_coe, LinearMap.transvection.apply, smul_neg, ← sub_eq_add_neg,
-    symm_apply_eq, map_sub, _root_.map_smul, apply_symm_apply]
+  suffices x = e x - f x • v by
+    simpa [LinearMap.transvection.apply, ← sub_eq_add_neg, symm_apply_eq]
   rw [eq_comm, sub_eq_iff_eq_add, ← coe_coe, he, LinearMap.transvection.apply]
 
 @[simp]
@@ -346,7 +348,7 @@ equivalences `e` such that the linear map `e - id` has rank at most 1.
 See also `LinearEquiv.mem_dilatransvections_iff_finrank`. -/
 theorem mem_dilatransvections_iff_rank {K : Type*} [DivisionRing K] [Module K V] {e : V ≃ₗ[K] V} :
     e ∈ dilatransvections K V ↔
-      Module.rank K (range ((e : V →ₗ[K] V)- LinearMap.id (R := K))) ≤ 1 := by
+      Module.rank K (range ((e : V →ₗ[K] V) - LinearMap.id (R := K))) ≤ 1 := by
   simp only [dilatransvections]
   constructor
   · simp only [Set.mem_setOf_eq]
@@ -390,7 +392,7 @@ theorem mem_dilatransvections_iff_finrank
     {K : Type*} [DivisionRing K] [Module K V] [Module.Finite K V]
     {e : V ≃ₗ[K] V} :
     e ∈ dilatransvections K V ↔
-      finrank K (range ((e : V →ₗ[K] V)- LinearMap.id (R := K))) ≤ 1 := by
+      finrank K (range ((e : V →ₗ[K] V) - LinearMap.id (R := K))) ≤ 1 := by
   rw [mem_dilatransvections_iff_rank, finrank, ← one_toNat,
     toNat_le_iff_le_of_lt_aleph0 (rank_lt_aleph0 K _) one_lt_aleph0]
 
@@ -564,8 +566,7 @@ open IsBaseChange
 
 It is not necessary to assume that the module is finite and free
 because `LinearMap.det` is identically 1 otherwise. -/
-@[simp] theorem _root_.LinearEquiv.transvection.det_eq_one
-    {f : Dual R V} {v : V} (hfv : f v = 0) :
+@[simp] theorem _root_.LinearEquiv.transvection.det_eq_one {f : Dual R V} {v : V} (hfv : f v = 0) :
     (LinearEquiv.transvection hfv).det = 1 := by
   rw [← Units.val_inj, LinearEquiv.coe_det,
     LinearEquiv.transvection.coe_toLinearMap hfv, Units.val_one]
