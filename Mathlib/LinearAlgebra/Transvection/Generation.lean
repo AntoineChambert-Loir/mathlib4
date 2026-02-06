@@ -386,10 +386,11 @@ theorem mem_transvections_pow_mul_dilatransvections_of_fixedReduce_ne_smul_id
       simp only [add_assoc, Nat.reduceAdd] at h
       have : ∃ v, LinearIndependent K ![v, e.fixedReduce v] := by
         contrapose! he
-        obtain ⟨a, ha, he⟩ :=
+        obtain ⟨a, ha⟩ :=
           LinearMap.exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent
           (by simp [h]) he
-        exact ⟨a, he⟩
+        refine ⟨a, fun x ↦ by
+          simp only [← coe_toLinearMap, ha, smul_apply, one_apply, Subring.smul_def]⟩
       obtain ⟨v, hu⟩ := this
       have hu_spare := id hu
       obtain ⟨u, rfl⟩ := e.fixedSubmodule.mkQ_surjective v
@@ -644,17 +645,13 @@ theorem mem_transvections_pow_mul_dilatransvections_of_notIsExceptional
 
 /- ## Generation of exceptional linear equivalences -/
 
-/-- If an element of `V ≃ₗ[K] V` is exceptional, then it is the product
-of `finrank K (V ⧸ e.fixedSubmodule)` transvections and one dilatransvection.
-(Fourth part of Dieudonné's theorem). -/
+/-- Any element of `V ≃ₗ[K] V`, is the product of `finrank K (V ⧸ e.fixedSubmodule)`
+transvections and one dilatransvection. (Fourth part of Dieudonné's theorem). -/
 theorem mem_transvections_pow_mul_dilatransvections :
     e ∈ transvections K V ^ (finrank K (V ⧸ e.fixedSubmodule)) * dilatransvections K V := by
-  by_cases he : IsExceptional e; swap
-  · have := mem_transvections_pow_mul_dilatransvections_of_notIsExceptional he
-    rw [Set.mem_mul] at this ⊢
-    obtain ⟨x, hx, y, hy, he⟩ := this
-    refine ⟨x, ?_, y, hy, he⟩
-    exact transvections_pow_mono (Nat.sub_le _ 1) hx
+  wlog he : IsExceptional e
+  · obtain ⟨x, hx, y, hy, he⟩ := mem_transvections_pow_mul_dilatransvections_of_notIsExceptional he
+    exact ⟨x, transvections_pow_mono (Nat.sub_le _ _) hx, y, hy, he⟩
   wlog finrank_le_add : 2 ≤ finrank K (V ⧸ e.fixedSubmodule)
   · rw [← one_mul e]
     apply Set.mul_mem_mul
