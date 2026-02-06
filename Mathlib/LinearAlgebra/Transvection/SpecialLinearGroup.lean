@@ -239,8 +239,7 @@ theorem _root_.LinearEquiv.transvection.existsBasis
   obtain ⟨f, v, hfv, hg⟩ := he
   have hf : f ≠ 0 := by contrapose he1; aesop
   have hv : v ≠ 0 := by contrapose he1; aesop
-  obtain ⟨s, b, i, j, hij, hvi, hfj⟩ :=
-    LinearMap.transvection.exists_basis_of_pairing_eq_zero hfv hf hv
+  obtain ⟨s, b, i, j, hij, hvi, hfj⟩ := exists_basis_of_pairing_eq_zero hfv hf hv
   -- Maybe this should be a general lemma
   -- or there is some extension from `Fin p ↪ α` to `Fin n ≃ α`.
   suffices ∃ θ : s ≃ Fin (n + 2), θ j = 0 ∧ θ i = 1 by
@@ -328,8 +327,7 @@ theorem isConj_of_mem_transvections {g g' : SpecialLinearGroup K V}
   obtain ⟨f, v, hfv, hg'⟩ := hg'
   have hf0 : f ≠ 0 := by contrapose hg'1; aesop
   have hv0 : v ≠ 0 := by contrapose hg'1; aesop
-  obtain ⟨s, b, i, j, hij, hv, hf⟩ :=
-    LinearMap.transvection.exists_basis_of_pairing_eq_zero hfv hf0 hv0
+  obtain ⟨s, b, i, j, hij, hv, hf⟩ := exists_basis_of_pairing_eq_zero hfv hf0 hv0
   have : ∃ k, k ≠ i ∧ k ≠ j := by
     contrapose hV3
     have : Fintype s := by exact FiniteDimensional.fintypeBasisIndex b
