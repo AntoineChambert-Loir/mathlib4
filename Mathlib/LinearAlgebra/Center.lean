@@ -23,7 +23,7 @@ In what follows, `V` is assumed to be a free `R`-module.
 
 * `LinearMap.commute_transvections_iff_of_basis`:
   if an endomorphism `f : V →ₗ[R] V` commutes with every elementary transvections
-  (in a given basis), then it is an homothety whose central ratio.
+  (in a given basis), then it is an homothety with central ratio.
   (Assumes that the basis is provided and has a non trivial set of indices.)
 
 * `LinearMap.exists_eq_smul_id_of_forall_notLinearIndependent`:
@@ -72,12 +72,12 @@ theorem commute_transvections_iff_of_basis
     {ι : Type*} [Nontrivial ι] (b : Basis ι R V)
     {f : V →ₗ[R] V}
     (hcomm : ∀ i j (r : R) (_ : i ≠ j), Commute f (transvection (b.coord i) (r • b j))) :
-    ∃ a ∈ center R, ∀ x, f x = a • x := by
-  simp only [Semigroup.mem_center_iff]
+    ∃ a : Subring.center R, f = a • 1 := by
+  simp only [SetLike.exists, Subring.mem_center_iff]
   rcases subsingleton_or_nontrivial V with hV | hV
-  · use 1
-    suffices ∀ x, f x = x by simpa using this
-    intro; apply hV.allEq
+  · refine ⟨1, by simp, ?_⟩
+    ext x
+    simp [Subring.smul_def, hV.allEq (f x) x]
   simp only [commute_iff_eq] at hcomm
   replace hcomm (i j : ι) (hij : i ≠ j) (r : R) :
       r • f (b j) = b.coord i (f (b i)) • r • b j := by
@@ -92,13 +92,13 @@ theorem commute_transvections_iff_of_basis
     obtain ⟨j, hji⟩ := exists_ne i
     simpa [h_allEq j i] using hcomm j i hji r
   let i : ι := Classical.ofNonempty
-  refine ⟨b.coord i (f (b i)),
-    fun r ↦ by simpa using congr(b.coord i $(hcomm i r)),
-    fun x ↦ ?_⟩
-  rw [← b.linearCombination_repr x, linearCombination_apply, map_finsuppSum, smul_sum]
+  refine ⟨b.coord i (f (b i)), fun r ↦ by simpa using congr(b.coord i $(hcomm i r)), ?_⟩
+  ext x
+  rw [← b.linearCombination_repr x, linearCombination_apply, map_finsuppSum]
+  simp only [smul_apply, End.one_apply, smul_sum]
   apply sum_congr
   intro j _
-  rw [_root_.map_smul, ← mul_smul, h_allEq i j, mul_smul, hcomm j]
+  simp [Subring.smul_def, h_allEq i j, hcomm j]
 
 /-- Over a domain, an endomorphism `f` of a free module `V`
 of rank ≠ 1 such that `f v` and `v` are colinear, for all `v : V`,
@@ -118,7 +118,8 @@ theorem exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent_of_basis
     {f : V →ₗ[R] V}
     {ι : Type*} [Nontrivial ι] (b : Basis ι R V)
     (h : ∀ v, ¬ LinearIndependent R ![v, f v]) :
-    ∃ a ∈ center R, ∀ x, f x = a • x := by
+    ∃ a : Subring.center R, f = a • 1 := by
+  -- We make the linear dependence condition explicit
   have feq (i) : f (b i) = (b.coord i) (f (b i)) • b i := by
     classical
     rw [b.ext_elem_iff]
@@ -140,6 +141,7 @@ theorem exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent_of_basis
       apply b.linearIndependent.eq_of_smul_apply_eq_smul_apply s 0 i j hj
       simpa using h
   have h' (i j) (hij : i ≠ j) (r : R) : b.coord i (f (b i)) * r = r * b.coord j (f (b j)) := by
+    -- we use that `f (b i + r • b j)` is a multiple of `b i + r • b j`
     let x := b.repr.symm ((Finsupp.single i 1).update j r)
     specialize h x
     simp only [Nat.succ_eq_add_one, Nat.reduceAdd,
@@ -169,6 +171,7 @@ theorem exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent_of_basis
     symm
     apply Or.resolve_left h2
     contrapose hst; simp [h1, hst]
+  -- This generalizes the equality formerly known as `feq`
   replace feq (i j) : f (b j) = b.coord i (f (b i)) • b j := by
     by_cases hij : i = j
     · rw [← hij, ← feq]
@@ -180,14 +183,10 @@ theorem exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent_of_basis
     obtain ⟨j, hij⟩ := exists_ne i
     rw [commute_iff_eq, h' i j (Ne.symm hij), feq i j, feq i i]
     simp
-  refine ⟨b.coord i (f (b i)), ?_, ?_⟩
-  · simpa [mem_center_iff, isMulCentral_iff, mul_assoc]
-  intro x
-  rw [← b.linearCombination_repr x, linearCombination_apply,
-    map_finsuppSum, smul_sum]
-  congr
-  ext j r
-  simp only [LinearMap.map_smul, feq i j, ← mul_smul, (ha r).eq]
+  refine ⟨⟨b.coord i (f (b i)), ?_⟩, ?_⟩
+  · simpa  [Subring.mem_center_iff, commute_iff_eq, eq_comm] using ha
+  apply b.ext
+  simpa only [smul_apply, End.one_apply, Subring.smul_def] using feq i
 
 /-- Over a domain `R`, an endomorphism `f` of a free module `V`
 of rank ≠ 1 such that `f v` and `v` are colinear, for all `v : V`,
@@ -205,22 +204,17 @@ theorem exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent
     {f : V →ₗ[R] V}
     (hV1 : finrank R V ≠ 1)
     (h : ∀ v, ¬ LinearIndependent R ![v, f v]) :
-    ∃ a ∈ center R, ∀ x, f x = a • x := by
+    ∃ a : Subring.center R, f = a • 1 := by
   rcases subsingleton_or_nontrivial V with hV | hV
   · use 1
-    simp only [one_mem_center, one_smul, true_and]
-    intro x
+    ext x
     apply hV.allEq
   let ι := Free.ChooseBasisIndex R V
   let b : Basis ι R V := Free.chooseBasis R V
   rcases subsingleton_or_nontrivial ι with hι | hι
-  · exfalso
-    contrapose hV1
-    have : Nonempty ι := Free.instNonemptyChooseBasisIndexOfNontrivial R V
+  · have : Nonempty ι := Free.instNonemptyChooseBasisIndexOfNontrivial R V
     have : Fintype ι := Fintype.ofFinite ι
-    rw [finrank_eq_card_basis b, ← Nat.card_eq_fintype_card,
-      Nat.card_eq_one_iff_unique]
-    aesop
+    simp_all [finrank_eq_card_basis b, ← Nat.card_eq_fintype_card]
   exact exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent_of_basis b h
 
 /-- Over a commutative domain, an endomorphism `f` of a free module `V`
@@ -229,7 +223,7 @@ consists of homotheties. -/
 theorem exists_eq_smul_id_of_forall_notLinearIndependent
     [CommRing R] [IsDomain R] [AddCommGroup V] [Module R V] [Free R V] {f : V →ₗ[R] V}
     (h : ∀ v, ¬ LinearIndependent R ![v, f v]) :
-    ∃ a : R, f = a • (LinearMap.id (R := R) (M := V)) := by
+    ∃ a : R, f = a • 1 := by
   by_cases hV1 : finrank R V = 1
   · rw [finrank_eq_one_iff Unit] at hV1
     let b : Basis Unit R V := Classical.ofNonempty
@@ -238,7 +232,7 @@ theorem exists_eq_smul_id_of_forall_notLinearIndependent
     intro i
     nth_rewrite 1 [← b.linearCombination_repr (f (b i))]
     simp [linearCombination_unique]
-  obtain ⟨a, _, hfa⟩ := exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent hV1 h
-  refine ⟨a, by ext; simp [hfa]⟩
+  obtain ⟨a, rfl⟩ := exists_mem_center_apply_eq_smul_of_forall_notLinearIndependent hV1 h
+  refine ⟨a, by simp [Subring.smul_def]⟩
 
 end LinearMap
