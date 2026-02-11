@@ -38,11 +38,16 @@ We follow the proof of [Komiya-1988][Komiya (1988)].
   it must hold for any linear order, for the reason that
   any linear order embeds into a complete dense linear order.
   However, this result does not seem to be known to Mathlib.
+
   * When `β` is `ℝ`, one can use `Real.toEReal` and one gets a proof for `ℝ`.
 
 ## TODO
 
-Explicit the classical particular cases (in particular, von Neumann)
+- Explicit the classical particular cases (in particular, von Neumann)
+
+- Once the Dedekind MacNeille completion of a linear order enters mathlib,
+  the statement of `DMCompletion.exists_isSaddlePointOn` can be simplified,
+  by assigning the variables `γ` and `ι : β ↪o γ` to the Dedekind MacNeille completion of `β`.
 
 ## References
 
@@ -57,11 +62,10 @@ Explicit the classical particular cases (in particular, von Neumann)
 
 -/
 
-@[expose] public section
-
 open Set Filter
 
-theorem clusterPt_principal_subtype_iff_frequently {α : Type*} [TopologicalSpace α] {s t : Set α}
+public theorem clusterPt_principal_subtype_iff_frequently
+    {α : Type*} [TopologicalSpace α] {s t : Set α}
     (hst : s ⊆ t) {J : Set s} {a : s} :
     ClusterPt a (Filter.principal J) ↔ ∃ᶠ x in nhdsWithin a t, ∃ h : x ∈ s, (⟨x, h⟩ : s) ∈ J := by
   rw [nhdsWithin_eq_map_subtype_coe (hst a.prop), Filter.frequently_map,
@@ -90,7 +94,6 @@ variable {X Y f}
 theorem mem_C_iff {b : β} {y : Y} {x : X} :
     x ∈ C X f b y ↔ f x y ≤ b := by simp [C]
 
--- private
 theorem monotone_C {u v : β} (y : Y) (h : u ≤ v) :
     C X f u y ⊆ C X f v y :=
   fun _ hxu ↦ le_trans hxu h
@@ -106,13 +109,6 @@ theorem mem_J_iff [AddCommGroup F] [Module ℝ F]
     z ∈ J X Y f b b' y y' ↔ C X f b z ⊆ C X f b' y := by
   simp only [mem_setOf_eq, J]
 
--- unused?
-theorem y_mem_J [AddCommGroup F] [Module ℝ F]
-    {b b' : β} {y y' : Y} (hbb' : b ≤ b') :
-    (⟨y.val, left_mem_segment ℝ y.val y'.val⟩ : segment ℝ y.val y'.val) ∈ J X Y f b b' y y' :=
-  monotone_C _ hbb'
-
--- private
 theorem disjoint_C {a : E} {b : β} {y y' : Y}
     (ha : ∀ x ∈ X, f a y ⊔ f a y' ≤ f x y ⊔ f x y')
     (hb : b < f a y ⊔ f a y') :
@@ -144,7 +140,6 @@ theorem isClosed_C [TopologicalSpace E]
   rw [lowerSemicontinuous_iff_isClosed_preimage] at hfy
   exact hfy b
 
--- private
 theorem isPreconnected_C [TopologicalSpace E]
     [AddCommGroup E] [Module ℝ E] [IsTopologicalAddGroup E]
     [ContinuousSMul ℝ E]
@@ -153,7 +148,6 @@ theorem isPreconnected_C [TopologicalSpace E]
     IsPreconnected (C X f b y) :=
   (hfy' y.val y.prop).isPreconnected_preimage_subtype
 
--- private
 theorem C_subset_union [AddCommGroup F] [Module ℝ F]
     (hfx' : ∀ x ∈ X, QuasiconcaveOn ℝ Y fun y => f x y)
     (b : β) (y y' : Y) (z : segment ℝ y.val y'.val) :
@@ -164,7 +158,6 @@ theorem C_subset_union [AddCommGroup F] [Module ℝ F]
     specialize hfx' ⟨y.prop, inf_le_left⟩ ⟨y'.prop, inf_le_right⟩ z.prop
     exact le_trans hfx'.2 hx
 
--- private
 theorem C_subset_or [TopologicalSpace E] [AddCommGroup E]
     [IsTopologicalAddGroup E] [Module ℝ E] [ContinuousSMul ℝ E]
     [AddCommGroup F] [Module ℝ F]
@@ -215,7 +208,6 @@ variable [TopologicalSpace F] [AddCommGroup F] [Module ℝ F]
     (hfx : ∀ x ∈ X, UpperSemicontinuousOn (fun y : F => f x y) Y)
     (hfx' : ∀ x ∈ X, QuasiconcaveOn ℝ Y fun y => f x y)
 
--- private
 include ne_X kX hfx hfx' cY hfy hfy' in
 theorem isClosed_J
     (a : E) (b b' : β) (y y' : Y)
@@ -231,20 +223,18 @@ theorem isClosed_J
     -- and let's find some `z ∈ J1` such that `x ∈ C t z ⊆ C t' y1`.
   intro z hz x hx
   have hzY :=(convex_iff_segment_subset.mp cY) y.prop y'.prop z.prop
-    /- y = lim yn, yn ∈ J1
-       comme x ∈ C t y, on a f x y ≤ t < t',
-       comme (f x ⬝) est usc, f x yn < t' pour n assez grand
-       donc x ∈ C t' yn pour n assez grand
+    /- pretend that `y = lim y n`, with `y n ∈ J1`
+       since `x ∈ C t y`, we have `f x y ≤ t < t'`,
+       since (f x ⬝) is usc, we have `f x yn < t'` for `n` large enough
+       hence `x ∈ C t' yn` for `n` large enough.
 
-       pour z ∈ J1 tel que x ∈ C t' z
-       On prouve C t' z ⊆ C t' y1
-       Par hypothèse, C t z ⊆ C t' y1
-       Sinon, C t' z ⊆ C t' y2 (hC_subset_or)
-       Donc x ∈ C t' y1 ∩ C t' y2 = ∅, contradiction
+       Let `z ∈ J1` be such that `x ∈ C t' z`
+       We prove `C t' z ⊆ C t' y1`
+       By assumption,  `C t z ⊆ C t' y1`
+       Otherwise, `hC_subset_or` proves that `C t' z ⊆ C t' y2`
+       hence `x ∈ C t' y1 ∩ C t' y2 = ∅`, a contradiction
 
-       En particulier, x ∈ C yt' y1
-
-    -/
+       In particular, `x ∈ C yt' y1` -/
   suffices ∃ z' ∈ J X Y f b b' y y', x ∈ C X f b' (z' : F) by
     obtain ⟨z', hz', hxz'⟩ := this
     suffices C X f b' z' ⊆ C X f b' y by
@@ -281,7 +271,7 @@ variable [DenselyOrdered β]
 variable [IsTopologicalAddGroup F] [ContinuousSMul ℝ F]
 
 include ne_X kX hfx hfx' cY hfy hfy' in
-theorem exists_lt_iInf_of_lt_iInf_of_sup
+public theorem exists_lt_iInf_of_lt_iInf_of_sup
     {y1 : F} (hy1 : y1 ∈ Y) {y2 : F} (hy2 : y2 ∈ Y) {t : β}
     (ht : ∀ x ∈ X, t < f x y1 ⊔ f x y2) :
     ∃ y0 ∈ Y, ∀ x ∈ X, t < f x y0 := by
@@ -363,7 +353,7 @@ theorem exists_lt_iInf_of_lt_iInf_of_sup
 variable (cX : Convex ℝ X)
 
 include ne_X cX cY kX hfx hfx' hfy hfy' in
-theorem exists_lt_iInf_of_lt_iInf_of_finite
+public theorem exists_lt_iInf_of_lt_iInf_of_finite
     {s : Set F} (hs : s.Finite) (hsY : s ⊆ Y)
     {t : β} (ht : ∀ x ∈ X, ∃ y ∈ s, t < f x y) :
     ∃ y0 ∈ Y, ∀ x ∈ X, t < f x y0 := by
@@ -414,7 +404,7 @@ theorem exists_lt_iInf_of_lt_iInf_of_finite
 
 include ne_X cX cY kX hfx hfx' hfy hfy' in
 /-- A minimax theorem without completeness, using `IsGLB` and `IsULB`. -/
-theorem minimax
+public theorem minimax
     (sup_y : E → β) (hsup_y : ∀ x ∈ X, IsLUB {f x y | y ∈ Y} (sup_y x))
     (inf_sup : β) (hinf_sup : IsGLB {sup_y x | x ∈ X} inf_sup)
     (inf_x : F → β) (hinf_x : ∀ y ∈ Y, IsGLB {f x y | x ∈ X} (inf_x y))
@@ -484,7 +474,7 @@ theorem minimax
 variable (ne_Y : Y.Nonempty) (kY : IsCompact Y)
 include ne_X ne_Y cX cY kX kY hfx hfx' hfy hfy' in
 /-- The Sion-von Neumann minimax theorem (saddle point form) -/
-theorem exists_isSaddlePointOn' :
+public theorem exists_isSaddlePointOn' :
     ∃ a ∈ X, ∃ b ∈ Y, IsSaddlePointOn X Y f a b := by
   have hmax_y (x) (hx : x ∈ X) : ∃ y ∈ Y, IsMaxOn (f x) Y y := (hfx x hx).exists_isMaxOn ne_Y kY
   choose! η η_mem η_max using hmax_y
@@ -535,7 +525,7 @@ variable [TopologicalSpace F] [AddCommGroup F] [Module ℝ F]
 
 include ne_X cX cY kX hfx hfx' hfy hfy' in
 /-- A minimax theorem in inf-sup form, for complete linear orders. -/
-theorem minimax' : (⨅ x ∈ X, ⨆ y ∈ Y, f x y) = ⨆ y ∈ Y, ⨅ x ∈ X, f x y := by
+public theorem minimax' : (⨅ x ∈ X, ⨆ y ∈ Y, f x y) = ⨆ y ∈ Y, ⨅ x ∈ X, f x y := by
   apply symm
   apply le_antisymm
   -- the obvious inclusion
@@ -575,7 +565,7 @@ theorem minimax' : (⨅ x ∈ X, ⨆ y ∈ Y, f x y) = ⨆ y ∈ Y, ⨅ x ∈ X,
 include ne_X ne_Y cX cY kX kY hfx hfx' hfy hfy' in
 /-- The Sion-von Neumann minimax theorem (saddle point form),
 case of complete linear orders. -/
-theorem exists_saddlePointOn' :
+public theorem exists_saddlePointOn' :
     ∃ a ∈ X, ∃ b ∈ Y, IsSaddlePointOn X Y f a b := by
   have hlsc : LowerSemicontinuousOn (fun x => ⨆ y ∈ Y, f x y) X := fun x hx ↦ by
     apply lowerSemicontinuousWithinAt_iSup
@@ -613,7 +603,9 @@ variable [TopologicalSpace F] [AddCommGroup F] [Module ℝ F]
   (hfx : ∀ x ∈ X, UpperSemicontinuousOn (fun y : F => f x y) Y)
   (hfx' : ∀ x ∈ X, QuasiconcaveOn ℝ Y fun y => f x y)
 
--- The following lines assume that γ is the Dedekind MacNeille completion of β
+/- The following lines essentially assume that `β` has a Dedekind MacNeille completion,
+but this is not in mathlib yet.
+One could then take `ι` to be the embedding of `β` into its DM completion. -/
 variable [TopologicalSpace β] [OrderTopology β]
 variable {γ : Type*} [CompleteLinearOrder γ] [DenselyOrdered γ]
   [TopologicalSpace γ] [OrderTopology γ]
@@ -622,7 +614,7 @@ variable {γ : Type*} [CompleteLinearOrder γ] [DenselyOrdered γ]
 include ne_X ne_Y cX cY kX kY hfx hfx' hfy hfy' hι in
 /-- The minimax theorem, in the saddle point form,
 when `β` is given a Dedekind-MacNeille completion `ι : β ↪o γ` -/
-theorem DMCompletion.exists_isSaddlePointOn :
+public theorem DMCompletion.exists_isSaddlePointOn :
   ∃ a ∈ X, ∃ b ∈ Y, IsSaddlePointOn X Y f a b := by
   -- Reduce to the cae of EReal-valued functions
   let φ : E → F → γ := fun x y ↦  ι (f x y)
@@ -661,7 +653,7 @@ variable [TopologicalSpace F] [AddCommGroup F] [Module ℝ F]
 
 include ne_X ne_Y cX cY kX kY hfx hfx' hfy hfy' in
 /-- The minimax theorem, in the saddle point form -/
-theorem exists_isSaddlePointOn :
+public theorem exists_isSaddlePointOn :
     ∃ a ∈ X, ∃ b ∈ Y, IsSaddlePointOn X Y f a b :=
   DMCompletion.exists_isSaddlePointOn ne_X cX kX hfy hfy' cY ne_Y kY hfx hfx'
     (ι := EReal.orderEmbedding) (hι := continuous_coe_real_ereal)
