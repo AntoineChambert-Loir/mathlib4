@@ -104,12 +104,16 @@ structure ProfiniteGrp.Hom (A B : ProfiniteGrp.{u}) where
   /-- The underlying `ContinuousMonoidHom`. -/
   hom' : A →ₜ* B
 
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 @[to_additive]
 instance : Category ProfiniteGrp where
   Hom A B := ProfiniteGrp.Hom A B
   id A := ⟨ContinuousMonoidHom.id A⟩
   comp f g := ⟨g.hom'.comp f.hom'⟩
 
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 @[to_additive]
 instance : ConcreteCategory ProfiniteGrp (fun X Y => X →ₜ* Y) where
   hom f := f.hom'
@@ -223,11 +227,19 @@ def ofFiniteGrp (G : FiniteGrp) : ProfiniteGrp :=
   letI : IsTopologicalGroup G := {}
   of G
 
+/-- A morphism of `FiniteGrp` induces a morphism of the associated profinite groups. -/
+@[to_additive /-- A morphism of `FiniteAddGrp` induces a morphism of the associated profinite
+additive groups. -/]
+def ofFiniteGrpHom {G H : FiniteGrp.{u}} (f : G ⟶ H) : ofFiniteGrp G ⟶ ofFiniteGrp H :=
+  ConcreteCategory.ofHom ⟨f.hom.hom, by continuity⟩
+
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 @[to_additive]
 instance : HasForget₂ FiniteGrp ProfiniteGrp where
   forget₂ :=
   { obj := ofFiniteGrp
-    map f := ⟨f.hom.hom, by continuity⟩ }
+    map := ofFiniteGrpHom }
 
 @[to_additive]
 instance : HasForget₂ ProfiniteGrp GrpCat where
@@ -265,7 +277,8 @@ instance : HasForget₂ ProfiniteGrp Profinite where
 @[to_additive]
 instance : (forget₂ ProfiniteGrp Profinite).Faithful := {
   map_injective := fun {_ _} _ _ h =>
-    ConcreteCategory.hom_ext _ _ (CategoryTheory.congr_fun h) }
+    ConcreteCategory.hom_ext _ _ fun x ↦ CategoryTheory.congr_fun h x }
+
 
 instance : (forget₂ ProfiniteGrp Profinite).ReflectsIsomorphisms where
   reflects {X Y} f _ := by
@@ -314,6 +327,8 @@ instance : Group (Profinite.limitCone (F ⋙ (forget₂ ProfiniteGrp Profinite))
 instance : IsTopologicalGroup (Profinite.limitCone (F ⋙ (forget₂ ProfiniteGrp Profinite))).pt :=
   inferInstanceAs (IsTopologicalGroup (limitConePtAux F))
 
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 /-- The explicit limit cone in `ProfiniteGrp`. -/
 @[to_additive /-- The explicit limit cone in `ProfiniteAddGrp`. -/]
 abbrev limitCone : Limits.Cone F where

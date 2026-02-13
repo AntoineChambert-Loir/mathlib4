@@ -30,12 +30,15 @@ namespace LightCondSet
 
 variable (X : LightCondSet.{u})
 
+set_option backward.privateInPublic true in
 /-- Auxiliary definition to define the topology on `X(*)` for a light condensed set `X`. -/
 private def coinducingCoprod :
     (Σ (i : (S : LightProfinite.{u}) × X.val.obj ⟨S⟩), i.fst) →
       X.val.obj ⟨LightProfinite.of PUnit⟩ :=
   fun ⟨⟨_, i⟩, s⟩ ↦ X.val.map ((of PUnit.{u + 1}).const s).op i
 
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 /-- Let `X` be a light condensed set. We define a topology on `X(*)` as the quotient topology of
 all the maps from light profinite sets `S` to `X(*)`, corresponding to elements of `X(S)`.
 In other words, the topology coinduced by the map `LightCondSet.coinducingCoprod` above. -/
@@ -46,6 +49,8 @@ local instance underlyingTopologicalSpace :
 /-- The object part of the functor `LightCondSet ⥤ TopCat` -/
 abbrev toTopCat : TopCat.{u} := TopCat.of (X.val.obj ⟨LightProfinite.of PUnit⟩)
 
+set_option backward.privateInPublic true in
+set_option backward.privateInPublic.warn false in
 lemma continuous_coinducingCoprod {S : LightProfinite.{u}} (x : X.val.obj ⟨S⟩) :
     Continuous fun a ↦ (X.coinducingCoprod ⟨⟨S, x⟩, a⟩) := by
   suffices ∀ (i : (T : LightProfinite.{u}) × X.val.obj ⟨T⟩),
@@ -55,7 +60,6 @@ lemma continuous_coinducingCoprod {S : LightProfinite.{u}} (x : X.val.obj ⟨S�
 
 variable {X} {Y : LightCondSet} (f : X ⟶ Y)
 
-attribute [local instance] Types.instFunLike Types.instConcreteCategory in
 /-- The map part of the functor `LightCondSet ⥤ TopCat` -/
 @[simps!]
 def toTopCatMap : X.toTopCat ⟶ Y.toTopCat :=

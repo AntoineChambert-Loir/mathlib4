@@ -5,11 +5,11 @@ Authors: Joël Riou
 -/
 module
 
-public import Mathlib.CategoryTheory.Sites.CoverLifting
-public import Mathlib.CategoryTheory.Sites.CoverPreserving
-public import Mathlib.CategoryTheory.Sites.Coverage
+public import Mathlib.CategoryTheory.Sites.Equivalence
 public import Mathlib.CategoryTheory.Limits.Constructions.Over.Connected
 public import Mathlib.CategoryTheory.Limits.Shapes.Connected
+public import Mathlib.CategoryTheory.Comma.Over.Pullback
+public import Mathlib.CategoryTheory.Functor.Flat
 
 /-! Localization
 
@@ -241,6 +241,27 @@ instance {X Y : C} (f : X ⟶ Y) : (Over.map f).IsContinuous (J.over X) (J.over 
 
 section
 
+open CategoryTheory Limits
+
+variable {C : Type u'} [Category* C] [HasBinaryProducts C] {J : GrothendieckTopology C}
+
+theorem coverPreserving_over_star (X : C) :
+    CoverPreserving J (J.over X) (Over.star X) where
+  cover_preserve {U} S hs := by
+    refine J.superset_covering ?_ (J.pullback_stable prod.snd hs)
+    intro y f hf
+    dsimp [Sieve.overEquiv]
+    rw [← Presieve.functorPushforward_comp]
+    refine ⟨_, _, prod.lift (f ≫ prod.fst) (𝟙 _), hf, Limits.prod.hom_ext ?_ ?_⟩ <;> simp
+
+instance (X : C) : (Over.star X).IsContinuous J (J.over X) :=
+  Functor.isContinuous_of_coverPreserving
+    (compatiblePreservingOfFlat (J.over X) (Over.star X)) (coverPreserving_over_star X)
+
+end
+
+section
+
 variable (A : Type u') [Category.{v'} A]
 
 /-- The pullback functor `Sheaf (J.over Y) A ⥤ Sheaf (J.over X) A` induced
@@ -365,5 +386,27 @@ lemma over_toGrothendieck_eq_toGrothendieck_comap_forget (X : C) :
     exact Precoverage.Saturate.of _ _ hR
 
 end
+
+instance {X : C} (f : Over X) :
+    f.iteratedSliceEquiv.inverse.IsDenseSubsite (J.over _) ((J.over _).over _) where
+  functorPushforward_mem_iff := by
+    simp [GrothendieckTopology.mem_over_iff, Sieve.overEquiv,
+      ← Over.iteratedSliceBackward_forget_forget f, Sieve.functorPushforward_comp]
+
+instance {X : C} (f : Over X) :
+    f.iteratedSliceForward.IsContinuous ((J.over _).over _) (J.over _) :=
+  inferInstanceAs (f.iteratedSliceEquiv.functor.IsContinuous _ _)
+
+instance {X : C} (f : Over X) :
+    f.iteratedSliceForward.IsCocontinuous ((J.over _).over _) (J.over _) :=
+  inferInstanceAs (f.iteratedSliceEquiv.functor.IsCocontinuous _ _)
+
+instance {X : C} (f : Over X) :
+    f.iteratedSliceBackward.IsContinuous (J.over _) ((J.over _).over _) :=
+  inferInstanceAs (f.iteratedSliceEquiv.inverse.IsContinuous _ _)
+
+instance {X : C} (f : Over X) :
+    f.iteratedSliceBackward.IsCocontinuous (J.over _) ((J.over _).over _) :=
+  inferInstanceAs (f.iteratedSliceEquiv.inverse.IsCocontinuous _ _)
 
 end CategoryTheory

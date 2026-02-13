@@ -6,8 +6,9 @@ Authors: Wanyi He, Jiedong Jiang, Jingting Wang, Andrew Yang, Shouxin Zhang
 module
 
 public import Mathlib.Algebra.Module.SpanRank
-public import Mathlib.RingTheory.Spectrum.Prime.Noetherian
 public import Mathlib.RingTheory.Ideal.MinimalPrime.Localization
+public import Mathlib.RingTheory.Ideal.MinimalPrime.Noetherian
+public import Mathlib.RingTheory.Spectrum.Prime.Topology
 
 /-!
 # The Height of an Ideal
@@ -36,10 +37,9 @@ chains of prime ideals below it. -/
 noncomputable def Ideal.primeHeight [hI : I.IsPrime] : ℕ∞ :=
   Order.height (⟨I, hI⟩ : PrimeSpectrum R)
 
-set_option backward.proofsInPublic true in
 /-- The height of an ideal is defined as the infimum of the heights of its minimal prime ideals. -/
 noncomputable def Ideal.height : ℕ∞ :=
-  ⨅ J ∈ I.minimalPrimes, @Ideal.primeHeight _ _ J (minimalPrimes_isPrime ‹_›)
+  ⨅ J ∈ I.minimalPrimes, @Ideal.primeHeight _ _ J (minimalPrimes_isPrime (I := I) ‹_›)
 
 /-- For a prime ideal, its height equals its prime height. -/
 lemma Ideal.height_eq_primeHeight [I.IsPrime] : I.height = I.primeHeight := by
@@ -340,6 +340,18 @@ theorem IsLocalization.AtPrime.ringKrullDim_eq_height (I : Ideal R) [I.IsPrime] 
       ← IsLocalization.primeHeight_comap I.primeCompl,
       ← IsLocalization.AtPrime.comap_maximalIdeal A I,
       Ideal.height_eq_primeHeight]
+
+lemma IsLocalization.height_map_of_disjoint {S : Type*} [CommRing S] [Algebra R S] (M : Submonoid R)
+    [IsLocalization M S] (p : Ideal R) [p.IsPrime] (h : Disjoint (M : Set R) (p : Set R)) :
+    (p.map <| algebraMap R S).height = p.height := by
+  let P := p.map (algebraMap R S)
+  have : P.IsPrime := isPrime_of_isPrime_disjoint M S p ‹_› h
+  have := isLocalization_isLocalization_atPrime_isLocalization (M := M) (Localization.AtPrime P) P
+  simp_rw [P, comap_map_of_isPrime_disjoint M S _ h] at this
+  have := ringKrullDim_eq_of_ringEquiv (IsLocalization.algEquiv p.primeCompl
+    (Localization.AtPrime P) (Localization.AtPrime p)).toRingEquiv
+  rw [AtPrime.ringKrullDim_eq_height P, AtPrime.ringKrullDim_eq_height p] at this
+  exact WithBot.coe_eq_coe.mp this
 
 lemma mem_minimalPrimes_of_primeHeight_eq_height {I J : Ideal R} [J.IsPrime] (e : I ≤ J)
     (e' : J.primeHeight = I.height) [J.FiniteHeight] : J ∈ I.minimalPrimes := by
