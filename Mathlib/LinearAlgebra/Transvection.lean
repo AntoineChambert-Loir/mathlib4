@@ -545,7 +545,8 @@ theorem fixedReduce_eq_one (e : V ≃ₗ[K] V) :
   simpa [LinearEquiv.ext_iff] using fixedReduce_eq_smul_iff e 1
 
 /-- Characterization of transvections within dilatransvections. -/
-theorem mem_transvections_iff_mem_dilatransvections_and_fixedReduce_eq_one [Module.Finite K V] (e : V ≃ₗ[K] V) :
+theorem mem_transvections_iff_mem_dilatransvections_and_fixedReduce_eq_one
+    [Module.Finite K V] (e : V ≃ₗ[K] V) :
     e ∈ transvections K V ↔ e ∈ dilatransvections K V ∧ e.fixedReduce = 1 := by
   refine ⟨fun ⟨f, v, hfv, he⟩ ↦ ?_, fun ⟨he, he'⟩ ↦ ?_⟩
   · constructor
