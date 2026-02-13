@@ -81,13 +81,9 @@ theorem coe_restrict (e : U ≃ₗ[R] V) (h : map e.toLinearMap P = Q) :
 /-- The fixed submodule of a linear equivalence. -/
 def fixedSubmodule (e : V ≃ₗ[R] V) : Submodule R V where
   carrier := { x | e x = x }
-  add_mem' {x y} hx hy := by
-    simp only [Set.mem_setOf_eq] at hx hy ⊢
-    simp [map_add, hx, hy]
+  add_mem' {x y} hx hy := by aesop
   zero_mem' := by simp
-  smul_mem' r x hx := by
-    simp only [Set.mem_setOf_eq] at hx
-    simp [hx]
+  smul_mem' r x hx := by aesop
 
 @[simp]
 theorem mem_fixedSubmodule_iff {e : V ≃ₗ[R] V} {v : V} :
@@ -123,7 +119,7 @@ theorem mem_stabilizer_fixedSubmodule (e : V ≃ₗ[R] V) :
 
 theorem inf_fixedSubmodule_le_fixedSubmodule_mul (e f : V ≃ₗ[R] V) :
     e.fixedSubmodule ⊓ f.fixedSubmodule ≤ (e * f).fixedSubmodule := by
-  intro; aesop
+  intro; simp_all
 
 theorem fixedSubmodule_mul_inf_fixedSubmodule_le_fixedSubmodule (e f : V ≃ₗ[R] V) :
     (e * f).fixedSubmodule ⊓ f.fixedSubmodule ≤ e.fixedSubmodule := by
@@ -134,8 +130,8 @@ theorem fixedSubmodule_mul_inf_fixedSubmodule_le_fixedSubmodule' (e f : V ≃ₗ
   intro x
   simp only [mem_inf, mem_fixedSubmodule_iff, mul_apply, and_imp]
   intro hefx hex
-  nth_rewrite 2 [← hex] at hefx
-  simpa using hefx
+  apply e.injective
+  grind
 
 theorem map_eq_of_mem_fixingSubgroup (W : Submodule R V)
     (he : e ∈ fixingSubgroup _ W.carrier) :
@@ -525,7 +521,7 @@ theorem fixedReduce_mkQ (x : V) :
 theorem fixedReduce_eq_smul_iff (e : V ≃ₗ[K] V) (a : K) :
     (∀ x, e.fixedReduce x = a • x) ↔
       ∀ v, e v - a • v ∈ e.fixedSubmodule := by
-  simp_rw [← e.fixedSubmodule.ker_mkQ, mem_ker, map_sub, ← fixedReduce_mkQ, sub_eq_zero]
+  simp only [← e.fixedSubmodule.ker_mkQ, mem_ker, map_sub, ← fixedReduce_mkQ, sub_eq_zero]
   constructor
   · intro H x; simp [H]
   · intro H x
@@ -549,7 +545,7 @@ theorem fixedReduce_eq_one (e : V ≃ₗ[K] V) :
   simpa [LinearEquiv.ext_iff] using fixedReduce_eq_smul_iff e 1
 
 /-- Characterization of transvections within dilatransvections. -/
-theorem mem_transvections_iff' [Module.Finite K V] (e : V ≃ₗ[K] V) :
+theorem mem_transvections_iff_mem_dilatransvections_and_fixedReduce_eq_one [Module.Finite K V] (e : V ≃ₗ[K] V) :
     e ∈ transvections K V ↔ e ∈ dilatransvections K V ∧ e.fixedReduce = 1 := by
   refine ⟨fun ⟨f, v, hfv, he⟩ ↦ ?_, fun ⟨he, he'⟩ ↦ ?_⟩
   · constructor
@@ -595,15 +591,12 @@ theorem mem_transvections_iff' [Module.Finite K V] (e : V ≃ₗ[K] V) :
         suffices f x = 0 by
           simpa [this, LinearMap.transvection.apply, sub_eq_zero] using hx
         rwa [hf', LinearMap.mem_ker] at hx
-      · simp only [v, LinearMap.transvection.apply]
-        aesop
+      · simp_all [v, LinearMap.transvection.apply]
     suffices e w - w ∈ LinearMap.ker f by
       simp only [LinearMap.mem_ker, map_sub] at this
       simp only [v, LinearMap.map_smul, map_sub, this, smul_zero]
     rw [← hf', ← Submodule.ker_mkQ e.fixedSubmodule, LinearMap.mem_ker]
-    simp only [Submodule.mkQ_apply, Submodule.Quotient.mk_sub]
-    simp only [← fixedReduce_mk, sub_eq_zero]
-    simp [he']
+    simp [Submodule.mkQ_apply, Submodule.Quotient.mk_sub, ← fixedReduce_mk, he']
 
 theorem fixingSubgroup_le_stabilizer (W : Submodule K V) :
     fixingSubgroup (V ≃ₗ[K] V) (W : Set V) ≤ stabilizer _ W := by
