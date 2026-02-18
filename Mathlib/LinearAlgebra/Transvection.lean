@@ -538,7 +538,6 @@ theorem Submodule.sup_span_eq_top [Module.Finite K V] {W : Submodule K V} {v : V
     aesop
   · exact Submodule.disjoint_span_singleton_of_notMem hv
 
-
 theorem fixedReduce_eq_one (e : V ≃ₗ[K] V) :
     e.fixedReduce = LinearEquiv.refl K _ ↔ ∀ v, e v - v ∈ e.fixedSubmodule := by
   simpa [LinearEquiv.ext_iff] using fixedReduce_eq_smul_iff e 1
