@@ -413,11 +413,12 @@ section divisionRing
 
 variable {K : Type*} [DivisionRing K] [Module K V]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Over a division ring, `dilatransvections` correspond to linear
 equivalences `e` such that the linear map `e - id` has rank at most 1.
 
 See also `LinearEquiv.mem_dilatransvections_iff_finrank`. -/
-theorem mem_dilatransvections_iff_rank {K : Type*} [DivisionRing K] [Module K V] {e : V ≃ₗ[K] V} :
+theorem mem_dilatransvections_iff_rank {e : V ≃ₗ[K] V} :
     e ∈ dilatransvections K V ↔
       Module.rank K (range ((e : V →ₗ[K] V) - LinearMap.id (R := K))) ≤ 1 := by
   simp only [dilatransvections]
@@ -459,9 +460,7 @@ open Cardinal in
 equivalences `e` such that the linear map `e - id` has rank at most 1.
 
 See also `LinearEquiv.mem_dilatransvections_iff_rank`. -/
-theorem mem_dilatransvections_iff_finrank
-    {K : Type*} [DivisionRing K] [Module K V] [Module.Finite K V]
-    {e : V ≃ₗ[K] V} :
+theorem mem_dilatransvections_iff_finrank [Module.Finite K V] {e : V ≃ₗ[K] V} :
     e ∈ dilatransvections K V ↔
       finrank K (range ((e : V →ₗ[K] V) - LinearMap.id (R := K))) ≤ 1 := by
   rw [mem_dilatransvections_iff_rank, finrank, ← one_toNat,
@@ -755,6 +754,7 @@ private theorem det_ofDomain [Free R V] [Module.Finite R V] [IsDomain R] (f : Du
 
 open IsBaseChange
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem det [Free R V] [Module.Finite R V] (f : Dual R V) (v : V) :
     (transvection f v).det = 1 + f v := by
   rcases subsingleton_or_nontrivial R with hR | hR
