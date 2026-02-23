@@ -199,21 +199,17 @@ lemma sym_map [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
     (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
   ext d
   simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
-  constructor
-  · intro hd
-    let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
-    let h : Sym {x // x ∈ d} n → Sym α n := fun p ↦ Sym.map g' p
-    use h d.attach
-    constructor
-    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, h, g']
+  refine ⟨fun hd ↦ ?_, fun ⟨b, hb, hd'⟩ d' hd ↦ ?_⟩
+  · let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
+    refine ⟨(fun p ↦ Sym.map g' p) d.attach, ?_, ?_⟩
+    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, g']
       intro i e he hi
       rw [← hi]
       exact (hd e he).choose_spec.1
-    · simp only [Sym.map_map, Function.comp_apply, h, g']
+    · simp only [Sym.map_map, Function.comp_apply, g']
       convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
       exact (hd x hx).choose_spec.2
-  · rintro ⟨b, hb, rfl⟩ d hd
-    simp only [Sym.mem_map] at hd
+  · rw [← hd', Sym.mem_map] at hd
     obtain ⟨a, ha, rfl⟩ := hd
     refine ⟨a, hb a ha, rfl⟩
 
