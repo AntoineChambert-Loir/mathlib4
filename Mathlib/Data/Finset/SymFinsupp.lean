@@ -19,4 +19,3 @@ theorem Sym.val_sum_eq_sum_count_smul {n : ℕ} {k : Sym (ι →₀ α) n}
   simp only [Sym.val_eq_coe, Multiset.mem_toFinset, Sym.mem_coe] at hx
   simp only [Finset.mem_sym_iff] at hk
   exact hk x hx
-
