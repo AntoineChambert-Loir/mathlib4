@@ -8,6 +8,7 @@ module
 public import Mathlib.Data.Finset.Lattice.Fold
 public import Mathlib.Data.Fintype.Vector
 public import Mathlib.Data.Multiset.Sym
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-!
 # Symmetric powers of a finset
@@ -286,6 +287,17 @@ def symInsertEquiv (h : a ∉ s) : (insert a s).sym n ≃ Σ i : Fin (n + 1), s.
     · exact Subtype.coe_injective
     refine Eq.trans ?_ (Sym.filter_ne_fill a _ ?_)
     exacts [rfl, h ∘ mem_sym_iff.1 hm a]
+
+@[to_additive]
+theorem val_prod_eq_prod_count_pow [CommMonoid α] {n : ℕ} {k : Sym α n}
+    {s : Finset α} (hk : k ∈ s.sym n) :
+    k.val.prod = ∏ d ∈ s, d ^ Multiset.count d k := by
+  rw [Finset.prod_multiset_count_of_subset _ s]
+  · apply Finset.prod_congr rfl (by simp)
+  intro x hx
+  simp only [Sym.val_eq_coe, Multiset.mem_toFinset, Sym.mem_coe] at hx
+  simp only [Finset.mem_sym_iff] at hk
+  exact hk x hx
 
 end Sym
 
