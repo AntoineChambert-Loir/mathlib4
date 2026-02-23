@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Data.Finset.Lattice.Fold
 public import Mathlib.Data.Fintype.Vector
--- public import Mathlib.Data.Finsupp.SMul
 public import Mathlib.Data.Multiset.Sym
 
 /-!
@@ -288,17 +287,6 @@ def symInsertEquiv (h : a ∉ s) : (insert a s).sym n ≃ Σ i : Fin (n + 1), s.
     refine Eq.trans ?_ (Sym.filter_ne_fill a _ ?_)
     exacts [rfl, h ∘ mem_sym_iff.1 hm a]
 
-/-
-theorem val_sum_eq_sum_count_smul [DecidableEq β] [AddCommMonoid β] {n : ℕ}
-    (k : Sym (α →₀ β) n) {s : Finset (α →₀ β)} (hk : k ∈ s.sym n) :
-    k.val.sum = ∑ d ∈ s, Multiset.count d k • d := by
-  rw [sum_multiset_count_of_subset _ s]
-  · apply Finset.sum_congr rfl (by simp)
-  intro x hx
-  simp only [Sym.val_eq_coe, Multiset.mem_toFinset, Sym.mem_coe] at hx
-  simp only [mem_sym_iff] at hk
-  exact hk x hx
--/
 end Sym
 
 end Finset
