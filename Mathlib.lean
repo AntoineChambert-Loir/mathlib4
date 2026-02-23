@@ -3653,7 +3653,6 @@ public import Mathlib.Data.Finset.Sort
 public import Mathlib.Data.Finset.Sum
 public import Mathlib.Data.Finset.Sups
 public import Mathlib.Data.Finset.Sym
-public import Mathlib.Data.Finset.SymFinsupp
 public import Mathlib.Data.Finset.SymmDiff
 public import Mathlib.Data.Finset.Union
 public import Mathlib.Data.Finset.Update
