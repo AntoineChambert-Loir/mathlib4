@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Data.Finset.Lattice.Fold
 public import Mathlib.Data.Fintype.Vector
+public import Mathlib.Data.Finsupp.SMul
 public import Mathlib.Data.Multiset.Sym
 
 /-!
@@ -194,6 +195,28 @@ theorem mem_sym_iff {m : Sym α n} : m ∈ s.sym n ↔ ∀ a ∈ m, a ∈ s := b
       ⟨a, h _ <| Sym.mem_cons_self _ _,
         mem_image_of_mem _ <| ih.2 fun b hb ↦ h _ <| Sym.mem_cons_of_mem hb⟩
 
+lemma sym_map [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
+    (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
+  ext d
+  simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
+  constructor
+  · intro hd
+    let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
+    let h : Sym {x // x ∈ d} n → Sym α n := fun p ↦ Sym.map g' p
+    use h d.attach
+    constructor
+    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, h, g']
+      intro i e he hi
+      rw [← hi]
+      exact (hd e he).choose_spec.1
+    · simp only [Sym.map_map, Function.comp_apply, h, g']
+      convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
+      exact (hd x hx).choose_spec.2
+  · rintro ⟨b, hb, rfl⟩ d hd
+    simp only [Sym.mem_map] at hd
+    obtain ⟨a, ha, rfl⟩ := hd
+    refine ⟨a, hb a ha, rfl⟩
+
 -- @[simp] /- adaption note for https://github.com/leanprover/lean4/pull/8419: the simpNF complained -/
 theorem sym_empty (n : ℕ) : (∅ : Finset α).sym (n + 1) = ∅ := rfl
 
@@ -268,6 +291,16 @@ def symInsertEquiv (h : a ∉ s) : (insert a s).sym n ≃ Σ i : Fin (n + 1), s.
     · exact Subtype.coe_injective
     refine Eq.trans ?_ (Sym.filter_ne_fill a _ ?_)
     exacts [rfl, h ∘ mem_sym_iff.1 hm a]
+
+theorem val_sum_eq_sum_count_smul [DecidableEq β] [AddCommMonoid β] {n : ℕ}
+    (k : Sym (α →₀ β) n) {s : Finset (α →₀ β)} (hk : k ∈ s.sym n) :
+    k.val.sum = ∑ d ∈ s, Multiset.count d k • d := by
+  rw [sum_multiset_count_of_subset _ s]
+  · apply Finset.sum_congr rfl (by simp)
+  intro x hx
+  simp only [Sym.val_eq_coe, Multiset.mem_toFinset, Sym.mem_coe] at hx
+  simp only [mem_sym_iff] at hk
+  exact hk x hx
 
 end Sym
 
