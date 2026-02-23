@@ -8,6 +8,7 @@ module
 public import Mathlib.Data.Finset.Lattice.Fold
 public import Mathlib.Data.Fintype.Vector
 public import Mathlib.Data.Multiset.Sym
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-!
 # Symmetric powers of a finset
