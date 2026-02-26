@@ -211,7 +211,7 @@ lemma sym_map [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
       exact (hd x hx).choose_spec.2
   · rw [← hd', Sym.mem_map] at hd
     obtain ⟨a, ha, rfl⟩ := hd
-    refine ⟨a, hb a ha, rfl⟩
+    exact ⟨a, hb a ha, rfl⟩
 
 -- @[simp] /- adaption note for https://github.com/leanprover/lean4/pull/8419: the simpNF complained -/
 theorem sym_empty (n : ℕ) : (∅ : Finset α).sym (n + 1) = ∅ := rfl
