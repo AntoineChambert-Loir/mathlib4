@@ -33,6 +33,8 @@ then `m.plurinomial = l.toFinsupp.multinomial`.
 
 -/
 
+@[expose] public section
+
 open List Multiset Nat
 
 lemma List.toFinsupp_sum {α : Type*} [AddCommMonoid α] [DecidableEq α] (l : List α) :
