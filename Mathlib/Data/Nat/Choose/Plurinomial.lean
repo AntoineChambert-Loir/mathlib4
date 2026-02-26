@@ -1,0 +1,130 @@
+/-
+Copyright (c) 2026 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
+
+module
+
+public import Mathlib.Data.Nat.Choose.Multinomial
+public import Mathlib.Data.List.ToFinsupp
+
+/-! # Plurinomial coefficients
+
+- `Multiset.plurinomial`.
+  Given a multiset `m` of natural numbers, `m.plurinomial` is the
+  multinomial coefficient defined by (m.sum) ! / ∏ i ∈ m, m i !.
+
+As an example, `Multiset.plurinomial {1, 2, 2} = 30`.
+
+- `Multiset.plurinomial_cons` proves that
+  `(x ::ₘ m).plurinomial = Nat.choose (x + m.sum) x * m.plurinomial`
+
+- `Multiset.plurinomial_add` proves that
+  `(m + m').plurinomial = Nat.choose (m + m').sum m.sum * m.plurinomial * m'.plurinomial`
+
+## Implementation note
+
+To avoid the definition as a quotient given above, `Multinomial.plurinomial`
+it is defined in terms of `Finsupp.multinomial`, via lists.
+
+If `m : Multiset ℕ` is the multiset associated with a list `l : List ℕ`,
+then `m.plurinomial = l.toFinsupp.multinomial`.
+
+-/
+
+open List Multiset Nat
+
+lemma List.toFinsupp_sum {α : Type*} [AddCommMonoid α] [DecidableEq α] (l : List α) :
+    l.toFinsupp.sum (fun _ a ↦ a) = l.sum := by
+  match l with
+  | nil => simp
+  | x :: l =>
+    simp only [toFinsupp_cons_eq_single_add_embDomain, sum_cons]
+    rw [Finsupp.sum_add_index (by simp) (by simp)]
+    simp only [Finsupp.sum_single_index, Finsupp.sum_embDomain, l.toFinsupp_sum]
+
+/-- The multinomial coefficients given by a list of natural numbers.
+
+See also `Multiset.plurinomial` -/
+abbrev List.plurinomial (l : List ℕ) : ℕ :=
+  l.toFinsupp.multinomial
+
+theorem List.plurinomial_cons (x : ℕ) (l : List ℕ) :
+    (x :: l).plurinomial = Nat.choose (x + l.sum) x * l.plurinomial := by
+  simp only [List.plurinomial]
+  rw [Finsupp.multinomial_update 0 (x :: l).toFinsupp]
+  congr 1
+  · congr
+    exact List.toFinsupp_sum (x :: l)
+  simp only [toFinsupp_cons_eq_single_add_embDomain, Finsupp.multinomial_eq]
+  have : (Finsupp.single 0 x +
+    Finsupp.embDomain { toFun := succ, inj' := succ_injective } l.toFinsupp).update 0 0 =
+      (Finsupp.embDomain { toFun := succ, inj' := succ_injective } l.toFinsupp).update 0 0 := by
+    ext i
+    by_cases hi : i = 0
+    · simp [hi]
+    · simp [Finsupp.update_apply, if_neg hi, Finsupp.single_eq_of_ne hi]
+  have h (x) : (Finsupp.embDomain { toFun := succ, inj' := succ_injective } l.toFinsupp) (x + 1) =
+    l[x]?.getD 0 := by
+    rw [Finsupp.embDomain_apply, dif_pos ⟨x, by simp⟩]
+    simp
+  simp [this, Nat.multinomial, h]
+
+/-- The `plurinomial` coefficients on `Multiset ℕ`. -/
+def Multiset.plurinomial (m : Multiset ℕ) : ℕ := by
+  apply Quot.liftOn m (fun l ↦ l.plurinomial)
+  intro l l' h
+  induction h with
+  | nil => simp
+  | @cons x l l' hl hl' => simp [List.plurinomial_cons, hl', hl.sum_nat]
+  | @swap x y l =>
+    simp only [List.plurinomial_cons, ← mul_assoc, List.sum_cons]
+    rw [← Nat.choose_symm (Nat.le_add_right y _), add_tsub_cancel_left]
+    rw [add_left_comm, Nat.choose_mul (Nat.le_add_right _ _), add_tsub_cancel_left]
+    simp [← Nat.choose_symm (Nat.le_add_right _ _), add_tsub_cancel_left]
+  | @trans l l' l'' h h' ih ih' => rw [ih, ← ih']
+
+theorem Multiset.plurinomial_cons (x : ℕ) (m : Multiset ℕ) :
+    (x ::ₘ m).plurinomial = Nat.choose (x + m.sum) x * m.plurinomial := by
+  obtain ⟨l, rfl⟩ := Quotient.exists_rep m
+  exact List.plurinomial_cons x l
+
+@[simp]
+theorem Multiset.plurinomial_zero : Multiset.plurinomial 0 = 1 := by
+  rfl
+
+@[simp]
+theorem Multiset.plurinomial_singleton (n : ℕ) :
+    Multiset.plurinomial {n} = 1 := by
+  simp [← cons_zero, plurinomial_cons]
+
+theorem Multiset.plurinomial_add (m m' : Multiset ℕ) :
+    (m + m').plurinomial = Nat.choose (m + m').sum m.sum * m.plurinomial * m'.plurinomial := by
+  induction m using Multiset.induction_on with
+  | empty => simp
+  | cons x m hind =>
+    simp only [cons_add, sum_cons, sum_add, plurinomial_cons, hind,
+      ← mul_assoc]
+    congr 2
+    rw [← Nat.choose_symm (Nat.le_add_right _ _), add_tsub_cancel_left]
+    rw [eq_comm]
+    rw [Nat.choose_mul (Nat.le_add_right _ _)]
+    rw [← Nat.choose_symm (Nat.le_add_right x (m.sum + m'.sum))]
+    simp only [add_tsub_cancel_left]
+
+theorem Multiset.plurinomial_nsmul (k : ℕ) (m : Multiset ℕ) :
+    (k • m).plurinomial = Nat.multinomial (Finset.range k) (fun _ ↦ m.sum) * m.plurinomial ^ k := by
+  induction k with
+  | zero => simp
+  | succ k hk =>
+    rw [succ_nsmul', plurinomial_add, hk, Finset.range_add_one,
+      Nat.multinomial_insert (by simp), sum_add, sum_nsmul, pow_succ']
+    simp only [smul_eq_mul, Finset.sum_const, Finset.card_range]
+    ring
+
+theorem Multiset.plurinomial_nsmul_singleton (k n : ℕ) :
+    (k • {n} : Multiset ℕ).plurinomial = Nat.multinomial (Finset.range k) (fun _ ↦ n) := by
+  simp [plurinomial_nsmul]
+
+#eval Multiset.plurinomial {1, 2, 2}
