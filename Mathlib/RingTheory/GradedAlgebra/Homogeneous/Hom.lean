@@ -41,4 +41,3 @@ theorem AlgHom.isHomogeneous_aeval {σ : Type*} {ι κ : Type*} [AddCommMonoid �
   rw [MvPolynomial.mem_support_iff] at hc
   simp_rw [← map_nsmul, ← map_sum]
   rw [← hp hc, Finsupp.weight_apply, Finsupp.sum]
-
