@@ -476,4 +476,3 @@ theorem plurinomial_nsmul_singleton (k n : ℕ) :
   simp [plurinomial_nsmul]
 
 end Multiset
-
