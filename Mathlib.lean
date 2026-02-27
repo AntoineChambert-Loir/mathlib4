@@ -3908,7 +3908,6 @@ public import Mathlib.Data.Nat.Choose.Factorization
 public import Mathlib.Data.Nat.Choose.Lucas
 public import Mathlib.Data.Nat.Choose.Mul
 public import Mathlib.Data.Nat.Choose.Multinomial
-public import Mathlib.Data.Nat.Choose.Plurinomial
 public import Mathlib.Data.Nat.Choose.Sum
 public import Mathlib.Data.Nat.Choose.Vandermonde
 public import Mathlib.Data.Nat.Count
